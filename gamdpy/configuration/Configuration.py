@@ -904,6 +904,78 @@ def configuration_to_lammps(configuration, timestep=0) -> str:
     return lammps_dump
 
 
+def configuration_to_lammps_light(configuration, timestep=0) -> str:
+    """ Convert a configuration to a string formatted as LAMMPS dump file 
+
+    Parameters
+    ----------
+
+    configuration : gamdpy.Configuration
+        a gamdpy configuration object
+
+    timestep : float
+        time at which the configuration is saved
+
+    Returns
+    -------
+
+    str
+        string formatted as LAMMPS dump file
+
+    Example
+    -------
+
+    >>> import gamdpy as gp
+    >>> conf = gp.Configuration(D=3)
+    >>> conf.make_positions(N=10, rho=1.0)
+    >>> lmp_dump = gp.configuration_to_lammps(configuration=conf)
+
+    """
+    D = configuration.D
+    if D != 3 and D!=2:
+        raise ValueError('Only 3D and 2D configurations are supported')
+    masses = configuration['m']
+    positions = configuration['r']
+    #image_coordinates = configuration.r_im
+    #forces = configuration['f']
+    #velocities = configuration['v']
+    ptypes = configuration.ptype
+    simulation_box = configuration.simbox.get_lengths()
+
+    # Header
+    header = f'ITEM: TIMESTEP\n{timestep:d}\n'
+    number_of_atoms = positions.shape[0]
+    header += f'ITEM: NUMBER OF ATOMS\n{number_of_atoms:d}\n'
+    header += f'ITEM: BOX BOUNDS pp pp pp\n'
+    for k in range(D):
+        header += f'{-simulation_box[k] / 2:e} {simulation_box[k] / 2:e}\n'
+    if D==2:
+        header += f'{-1 / 2:e} {1 / 2:e}\n'
+    # Atoms
+    atom_data = 'ITEM: ATOMS id type mass x y z ix iy iz vx vy vz fx fy fz'
+    for i in range(number_of_atoms):
+        atom_data += f'\n{i + 1:d} {ptypes[i] + 1:d} {masses[i]:f} '
+        for k in range(D):
+            atom_data += f'{positions[i, k]:f} '
+        if D==2:
+            atom_data += f'{0.0:f} '
+        # for k in range(D):
+        #     atom_data += f'{image_coordinates[i, k]:d} '
+        # if D==2:
+        #     atom_data += f'{0.0:f} '
+        # for k in range(D):
+        #     atom_data += f'{velocities[i, k]:f} '
+        # if D==2:
+        #     atom_data += f'{0.0:f} '
+        # for k in range(D):
+        #     atom_data += f'{forces[i, k]:f} '
+        if D==2:
+            atom_data += f'{0.0:f} '
+        #atom_data += '\n'
+    # Combine header and atom lengths
+    lammps_dump = header + atom_data
+    return lammps_dump
+
 
 
 
