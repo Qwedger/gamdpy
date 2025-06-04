@@ -3,7 +3,7 @@
 
 
 
-import rumdpy as rp
+import gamdpy as gp
 import pandas as pd
 import numpy as np
 from numba import config
@@ -17,22 +17,25 @@ temperature = 0.800
 
 
 # Setup configuration: FCC Lattice
-configuration = rp.make_configuration_fcc(nx=5, ny=5, nz=5, rho=1.200)
-configuration.randomize_velocities(T=1.6)
-configuration.ptype[::5] = 1
+configuration = gp.Configuration(D=3, compute_flags={'Fsq':True, 'lapU':True, 'Vol':True})
+configuration.make_positions(N=5*5*5*4, rho=1.2)
+configuration['m'] = 1.0 # Specify all masses to unity
+configuration.randomize_velocities(temperature=2.0) # Initial high temperature for randomizing
+configuration.ptype[::5] = 1 # Every fifth particle set to type 1 (4:1 mixture)
 
 
 # Setup pair potential: Single component 12-6 Lennard-Jones
-pairfunc = rp.apply_shifted_potential_cutoff(rp.LJ_12_6_sigma_epsilon)
+pair_func = gp.apply_shifted_potential_cutoff(gp.LJ_12_6_sigma_epsilon)
+
 sig = [[1.00, 0.80],
         [0.80, 0.88]]
 eps = [[1.00, 1.50],
         [1.50, 0.50]]
 cut = np.array(sig)*2.5
-pairpot = rp.PairPotential2(pairfunc, params=[sig, eps, cut], max_num_nbs=1000)
+pair_pot = gp.PairPotential(pair_func, params=[sig, eps, cut], max_num_nbs=1000)
 
 
-Ttarget_function = rp.make_function_ramp(value0=2.000,       x0=4*1024*64*0.004*(1/8), 
+Ttarget_function = gp.make_function_ramp(value0=2.000,       x0=4*1024*64*0.004*(1/8),
                                           value1=temperature, x1=4*1024*64*0.004*(1/4))
 print()
 print("Step 1/3: Running a NVT simulation with a temperature ramp from T=2.0",
@@ -40,11 +43,12 @@ print("Step 1/3: Running a NVT simulation with a temperature ramp from T=2.0",
 for i in range(2): print()
 # Setup of NVT integrator and simulation, in order to find the average value
 # of the potential energy to be used by the NVU integrator.
-NVT_integrator = rp.integrators.NVT(temperature = Ttarget_function, tau = 0.2, dt = 0.004)
-NVT_sim = rp.Simulation(configuration, pairpot, NVT_integrator, 
-                        scalar_output=16, steps_between_momentum_reset = 100, 
-                        num_timeblocks = 64, steps_per_timeblock = 4*1024,
-                        storage = 'memory')
+NVT_integrator = gp.integrators.NVT(temperature = Ttarget_function, tau = 0.2, dt = 0.004)
+#runtime_actions = [gp.MomentumReset(100), ]
+runtime_actions = [gp.MomentumReset(100), ]
+NVT_sim = gp.Simulation(configuration, pair_pot, NVT_integrator, runtime_actions,
+                    num_timeblocks=64, steps_per_timeblock=4*1024,
+                    storage="memory")
 
 
 #Running the NVT simulation
@@ -55,9 +59,12 @@ print("Step 2/3: Continuing the NVT simulation with T = 0.8 in order to find the
       "average value of the potential energy to be used by the NVU integrator")
 for i in range(2): print()
 
-NVT_integrator = rp.integrators.NVT(temperature = temperature, tau = 0.2, dt = 0.004)
-NVT_sim = rp.Simulation(configuration, pairpot, NVT_integrator, 
-                        scalar_output=2, steps_between_momentum_reset = 100, 
+runtime_actions = [gp.MomentumReset(100),
+                    gp.ScalarSaver(2, {'Fsq':True, 'lapU':True}), ]
+
+
+NVT_integrator = gp.integrators.NVT(temperature = temperature, tau = 0.2, dt = 0.004)
+NVT_sim = gp.Simulation(configuration, pair_pot, NVT_integrator, runtime_actions,
                         num_timeblocks = 32, steps_per_timeblock = 8*1024,
                         storage = 'memory')
 
@@ -66,10 +73,10 @@ NVT_sim = rp.Simulation(configuration, pairpot, NVT_integrator,
 NVT_sim.run()
 
 
-# 
+#
 #Finding the average potential energy (= U_0) of the run.
 columns = ['U']
-data = np.array(rp.extract_scalars(NVT_sim.output, columns, first_block=8))
+data = np.array(gp.extract_scalars(NVT_sim.output, columns, first_block=8))
 df = pd.DataFrame(data.T, columns=columns)
 U_0 = np.mean(df['U'])/configuration.N
 
