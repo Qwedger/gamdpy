@@ -20,18 +20,22 @@ class TimeScheduler():
         """
         # `stepmax` is by construction the same as `steps_per_timeblock` in TrajectorySaver
         self.stepmax = stepmax
+
         # keywords specific to selected schedule
         if self.schedule=='log':
             self.base = self._kwargs.get('base', 2.0)
             self.steps = self._log_steps()
+
         elif self.schedule=='lin':
             self.npoints = self._kwargs.get('npoints', None)
             assert type(self.npoints)==int, 'Invalid number of points'
             self.steps = self._lin_steps()
+
         elif self.schedule=='geom':
             self.npoints = self._kwargs.get('npoints', None)
             assert type(self.npoints)==int, 'Invalid number of points'
             self.steps = self._geom_steps()
+
         elif self.schedule=='custom':
             self.steps = self._kwargs.get('steps', None)
             assert self.steps is not None, 'Expected custom list of steps'
@@ -138,6 +142,7 @@ class TrajectorySaver(RuntimeAction):
                               chunks=(1, 1, self.configuration.N, self.configuration.D), 
                               dtype=np.int32)
         #output.attrs['vectors_names'] = list(self.sid.keys())
+        output.attrs['steps'] = self.time_scheduler.steps
         if self.include_simbox:
             if 'sim_box' in output['trajectory_saver'].keys():
                 del output['trajectory_saver/sim_box']
