@@ -11,7 +11,7 @@ import numba
 from numba import cuda
 from .simulationbox import SimulationBox
 
-class Orthorhombic():
+class Orthorhombic(SimulationBox):
     """ Standard rectangular simulation box class 
 
     Example
@@ -42,6 +42,7 @@ class Orthorhombic():
         """Generates function dist_sq_dr which computes displacement and distance squared for one neighbor """
         D = self.D
         def dist_sq_dr_function(ri, rj, sim_box, dr):  
+
             ''' Returns the squared distance between ri and rj applying MIC and saves ri-rj in dr '''
             dist_sq = numba.float32(0.0)
             for k in range(D):
@@ -89,7 +90,7 @@ class Orthorhombic():
 
     def get_volume(self):
         """ Return the box volume """
-        #self.copy_to_host() # not necessary if volume if fixed and if not fixed then presumably stuff like normalizing stress by volume should be done in the device anyway
+        #self.copy_to_host() # not necessary if volume is fixed and if not fixed then presumably stuff like normalizing stress by volume should be done in the device anyway
         return self.get_volume_function()(self.data_array)
 
     def get_volume_function(self):
@@ -107,27 +108,27 @@ class Orthorhombic():
         """ Scale the box lengths by scale_factor """
         self.data_array *= scale_factor
 
-    def get_dist_moved_sq_function(self):
-        D = self.D
-        def dist_moved_sq_function(r_current, r_last, sim_box, sim_box_last):
-            ''' Returns squared distance between vectors r_current and r_last '''
-            dist_sq = numba.float32(0.0)
-            for k in range(D):
-                dr_k = r_current[k] - r_last[k]
-                box_k = sim_box[k]
-                dr_k += (-box_k if numba.float32(2.0) * dr_k > +box_k else
-                         (+box_k if numba.float32(2.0) * dr_k < -box_k else numba.float32(0.0)))  # MIC
-                dist_sq = dist_sq + dr_k * dr_k
+    #def get_dist_moved_sq_function(self):
+    #    D = self.D
+    #    def dist_moved_sq_function(r_current, r_last, sim_box, sim_box_last):
+    #        ''' Returns squared distance between vectors r_current and r_last '''
+    #        dist_sq = numba.float32(0.0)
+    #        for k in range(D):
+    #            dr_k = r_current[k] - r_last[k]
+    #            box_k = sim_box[k]
+    #            dr_k += (-box_k if numba.float32(2.0) * dr_k > +box_k else
+    #                     (+box_k if numba.float32(2.0) * dr_k < -box_k else numba.float32(0.0)))  # MIC
+    #            dist_sq = dist_sq + dr_k * dr_k
 
-            return dist_sq
-        return dist_moved_sq_function
+    #        return dist_sq
+    #    return dist_moved_sq_function
 
     def get_dist_moved_exceeds_limit_function(self):
         D = self.D
 
         def dist_moved_exceeds_limit_function(r_current, r_last, sim_box, sim_box_last, skin, cut):
             """ Returns True if squared distance between r_current and r_last exceeds half skin.
-            Parameters sim_box_last and cut are not used here, but is needed for the Lees-Edwards type of Simbox"""
+            Parameters sim_box_last and cut are not used here, but are needed for the Lees-Edwards type of Simbox"""
             dist_sq = numba.float32(0.0)
             for k in range(D):
                 dr_k = r_current[k] - r_last[k]
