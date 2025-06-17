@@ -1,4 +1,9 @@
 """ The gamdpy main module """
+
+# Setting to make gamdpy run on google.colab:
+from numba import config
+config.CUDA_ENABLE_PYNVJITLINK = 1
+
 # Objects which are imported here will be in the main namespace and can be called are gamdpy.object
 # Objects which are imported in the __init__.py of subpackages are called as gamdpy.subpackage.object
 
@@ -6,7 +11,8 @@
 # The configuration subpackage contains details about the configuration (positions, energies, etc)
 # The (abstract base) class SimulationBox, and derived classes Orthrhombic and LeesEdwards have information about the simulation box
 from .configuration.Configuration import Configuration
-from .configuration.Configuration import configuration_to_hdf5, configuration_from_hdf5, configuration_to_rumd3, configuration_from_rumd3, configuration_from_hdf5_group, configuration_to_lammps, configuration_to_lammps_light
+from .configuration.old_input_output import configuration_to_rumd3, configuration_from_rumd3, configuration_to_lammps
+from .configuration.old_input_output import configuration_from_hdf5 # This should be removed
 from .configuration.Configuration import replicate_molecules
 from .simulation_boxes.orthorhombic import Orthorhombic
 from .simulation_boxes.lees_edwards import LeesEdwards
