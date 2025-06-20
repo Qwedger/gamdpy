@@ -1,8 +1,6 @@
 """ 
 """
 
-
-
 import gamdpy as gp
 import pandas as pd
 import numpy as np
@@ -12,7 +10,6 @@ config.CUDA_LOW_OCCUPANCY_WARNINGS = False
 
 dl = 0.03
 temperature = 0.800
-
 
 
 
@@ -45,7 +42,9 @@ for i in range(2): print()
 # of the potential energy to be used by the NVU integrator.
 NVT_integrator = gp.integrators.NVT(temperature = Ttarget_function, tau = 0.2, dt = 0.004)
 #runtime_actions = [gp.MomentumReset(100), ]
-runtime_actions = [gp.MomentumReset(100), ]
+runtime_actions = [gp.MomentumReset(100),
+                   #gp.ScalarSaver(2),
+                   gp.TrajectorySaver() ,]
 NVT_sim = gp.Simulation(configuration, pair_pot, NVT_integrator, runtime_actions,
                     num_timeblocks=64, steps_per_timeblock=4*1024,
                     storage="memory")
@@ -60,6 +59,7 @@ print("Step 2/3: Continuing the NVT simulation with T = 0.8 in order to find the
 for i in range(2): print()
 
 runtime_actions = [gp.MomentumReset(100),
+                   gp.TrajectorySaver(),
                     gp.ScalarSaver(2, {'Fsq':True, 'lapU':True}), ]
 
 
@@ -88,10 +88,14 @@ print("Step 3/3: Running the NVU simulation using the final configuration",
       f"constant-potential energy: U_0 = {np.round(U_0,3)} (pr particle)")
 for i in range(2): print()
 #Setting up the NVU integrator and simulation. Note, that dt = dl.
-NVU_integrator = rp.integrators.NVU(U_0 = U_0, dt = dl)
-NVU_sim = rp.Simulation(configuration, pairpot, NVU_integrator, 
-                        scalar_output=4*128, steps_between_momentum_reset=100, 
-                        num_timeblocks = 32, steps_per_timeblock = 32*1024,
+NVU_integrator = gp.integrators.NVU(U_0 = U_0, dt = dl)
+
+runtime_actions = [gp.MomentumReset(100),
+                    gp.TrajectorySaver(),
+                    gp.ScalarSaver(4*128, {'Fsq':True, 'lapU':True}), ]
+
+NVU_sim = gp.Simulation(configuration, pair_pot, NVU_integrator, runtime_actions,
+                        num_timeblocks = 32, steps_per_timeblock = 32*1024, #num_timeblocks = 32
                         storage = 'memory')
 
 
@@ -101,15 +105,15 @@ NVU_sim.run()
 
 
 #Calculating dynamics
-NVU_dynamics = rp.tools.calc_dynamics(NVU_sim.output, 16)
-NVT_dynamics = rp.tools.calc_dynamics(NVT_sim.output, 16)
+NVU_dynamics = gp.tools.calc_dynamics(NVU_sim.output, 16, qvalues=[7.5, 5.5])
+NVT_dynamics = gp.tools.calc_dynamics(NVT_sim.output, 16, qvalues=[7.5, 5.5])
 
 plt.loglog(0,0,'k',label = "NVT simulation")
 plt.loglog(0,0,'k+',label = "NVU simulation")
-plt.loglog(NVT_dynamics['times']/0.028,NVT_dynamics['msd'][:,0])
-plt.loglog(NVT_dynamics['times']/0.028,NVT_dynamics['msd'][:,1])
-plt.loglog(NVU_dynamics['times'],NVU_dynamics['msd'][:,0],"C0+",markersize=10)
-plt.loglog(NVU_dynamics['times'],NVU_dynamics['msd'][:,1],"C1+",markersize=10)
+plt.loglog(NVT_dynamics['times'],NVT_dynamics['msd'][:,0])
+plt.loglog(NVT_dynamics['times'],NVT_dynamics['msd'][:,1])
+plt.loglog(NVU_dynamics['times']*dl,NVU_dynamics['msd'][:,0],"C0+",markersize=10)
+plt.loglog(NVU_dynamics['times']*dl,NVU_dynamics['msd'][:,1],"C1+",markersize=10)
 plt.loglog((0,NVU_dynamics['times'][-1]),(0,NVU_dynamics['msd'][-1,0]),'k--',linewidth=.5, label = "Slope = 1")
 plt.legend()
 plt.title("Comparing NVT and NVU dynamics using the mean squared\ndisplacement for A and B particles in KABLJ system at T=0.8.")
@@ -119,8 +123,10 @@ plt.xlim(0.1)
 plt.ylim(0.1**5)
 plt.show()
 #Calculating the configurational temperature
+
+
 columns = ['U', 'lapU', 'Fsq', 'W']
-data = np.array(rp.extract_scalars(NVU_sim.output, columns, first_block=16))
+data = np.array(gp.extract_scalars(NVU_sim.output, columns, first_block=16))
 df = pd.DataFrame(data.T, columns=columns)
 df['Tconf'] = df['Fsq']/df['lapU']
 Tconf = np.mean(df['Tconf'],axis=0)
