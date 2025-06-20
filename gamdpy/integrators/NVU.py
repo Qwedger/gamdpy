@@ -1,7 +1,7 @@
 import numpy as np
 import numba
 from numba import cuda
-import rumdpy as rp
+import gamdpy as gp
 
 class NVU():
     """
@@ -34,13 +34,13 @@ class NVU():
         self.d_U = cuda.to_device(self.U)
         self.d_old_U = cuda.to_device(self.old_U)
 
-    def get_params(self, configuration, interactions_params, verbose=False):
+    def get_params(self, configuration: gp.Configuration, interactions_params: tuple, verbose=False) -> tuple:
         dt = np.float32(self.dt)
         return (dt, self.d_f_dot_v, self.d_f_dot_f, 
                 self.d_denominator, self.d_U, self.d_old_U)   # Needs to be compatible with unpacking in
                                                                 # step() and update_thermostat_state() below.
 
-    def get_kernel(self, configuration, compute_plan, interactions_kernel, verbose=False):
+    def get_kernel(self, configuration: gp.Configuration, compute_plan: dict, compute_flags: dict, interactions_kernel, verbose=False):
 
         # Unpack parameters from configuration and compute_plan
         D, num_part = configuration.D, configuration.N
@@ -51,7 +51,7 @@ class NVU():
         if callable(self.U_0):
             U_0_function = self.U_0
         else:
-            U_0_function = rp.make_function_constant(value=float(self.U_0))
+            U_0_function = gp.make_function_constant(value=float(self.U_0))
 
         if verbose:
             print(f'Generating NVT kernel for {num_part} particles in {D} dimensions:')
@@ -61,11 +61,11 @@ class NVU():
 
         # Unpack indices for vectors and scalars to be compiled into kernel
         r_id, v_id, f_id = [configuration.vectors.indices[key] for key in ['r', 'v', 'f']]
-        m_id, k_id, fsq_id, u_id = [configuration.sid[key] for key in ['m', 'k', 'fsq', 'u']]
+        m_id, k_id, fsq_id, u_id = [configuration.sid[key] for key in ['m', 'K', 'Fsq', 'U']]
 
         # JIT compile functions to be compiled into kernel
         U_0_function = numba.njit(U_0_function)
-        apply_PBC = numba.njit(configuration.simbox.apply_PBC)
+        apply_PBC = numba.njit(configuration.simbox.get_apply_PBC())
 
         def reset(integrator_params):
             dt, f_dot_v, f_dot_f, denominator, U, old_U = integrator_params
@@ -140,7 +140,7 @@ class NVU():
         reset = cuda.jit(device=gridsync)(reset)
 
         if gridsync: # construct and return device function
-            def kernel(grid, vectors, scalars, r_im, sim_box, integrator_params, time):
+            def kernel(grid, vectors, scalars, r_im, sim_box, integrator_params, time, ptype):
                 reset(integrator_params)
                 grid.sync()
                 calc_dot_products(vectors, scalars, integrator_params)
@@ -152,7 +152,7 @@ class NVU():
                 return
             return cuda.jit(device=gridsync)(kernel)
         else: # return python function, which makes kernel-calls
-            def kernel(grid, vectors, scalars, r_im, sim_box, integrator_params, time):
+            def kernel(grid, vectors, scalars, r_im, sim_box, integrator_params, time, ptype):
                 reset[num_blocks, (pb, 1)](integrator_params)
                 calc_dot_products[num_blocks, (pb, 1)](vectors, scalars, integrator_params)
                 step[num_blocks, (pb, 1)](grid, vectors, scalars, r_im, sim_box, integrator_params, time)

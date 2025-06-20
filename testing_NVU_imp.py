@@ -7,6 +7,7 @@ Created on Wed Jun  4 15:14:56 2025
 """
 
 import sys
-sys.path.append(".")
+sys.path.append("..")
 
-import examples.NVU_example
+from tests.test_NVU import test_NVU
+test_NVU()
