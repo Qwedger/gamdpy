@@ -13,74 +13,11 @@ A rough estimate is that the maximum number of time steps per second (TPS) that 
 
 There is a limit to how many thread blocks can be used with grid synchronization, which makes it inefficient at large system sizes, so we need to be able to choose between the two ways of synchronization. 
 A good place to see how this is done without implementing all functions twice is in 'integrators.py'
- 
-## TODO, short term
-- [x] Break a single file into several files/modules 
-- [x] Start using GIT
-- [x] Make it into a python package that can be installed locally by pip
-- [x] cut = 2.5 hardcoded - change that! -> 'max_cut' now part of interaction parameters for pair-potential 
-- [x] Implement springs as an example of 'fixed interactions' (needs testing for gridsync==False). 
-- [x] Implement (fixed) planar interactions, e.g., smooth walls, gravity, and electric fields.
-- [x] Implement exclusion list 
-- [x] upload to GitLab
-- [x] Use 'colarray' for vectors in Configuration
-- [x] Move r_ref from Configuration to nblist
 
-## TODO, before summer interns arrive
-- [X] SLLOD (stress, LEBC), Nick
-- [X] Bonds interface
-- [X] Implement other fixed interactions: point interactions (tethered particles). Jesper
-- [X] Finish Atomic interface (runtime actions...) Thomas
-- [X] Momentum resetting (remove default) Nick
-- [X] Read rumd3 & others configurations Nick
-- [X] Testing (Framework, doctest), Ulf & Thomas
-- [X] Testing using gitlab CI, Lorenzo
-- [X] Include scalar column names in output, Lorenzo
-- [X] Include vector column names in output, Lorenzo
-- [X] Documentation/Tutorials/Best practices
-- [X] Generalize make_configuration to different lattices, Ulf
-- [X] Read configurations from file (Lorenzo: added function load_output in tools)
-- [X] Runtime actions to include conf_saver and scalar_output, Thomas
-- [X] Per particles thermostat using interaction
-- [X] Post analysis, RDF and Sq 
-- [X] Post analysis for multicomponents, Lorenzo/Danqui
+## Todo / Issues
 
+Open Todo's have been transfered to issues after developer meeting 4/6-25. For reference old todo-list is [here](old_todo.md).
 
-## TODO or decide not necessary, before paper/'going public'
-- [X] Molecules (angles, dihedrals) Jesper
-- [ ] Molecules (Interface) Jesper, Ulf
-- [ ] Molecular stress, Jesper/Nick
-- [X] Stress calculation for bonds. Perhaps warning is not included for angles, dihedrals, Nick/Jesper
-- [X] Implement O($N$) nblist update and mechanism for choosing between this and O($N^2$)
-- [X] Test O($N$) nblist update and mechanism for choosing between this and O($N^2$)
-- [X] Allow more flexible/dynamical changing which data to be stored in Configuration, Nick
-- [ ] make GitLab/Hub address users, not ourselves (remove dev-state of page)
-- [ ] Reserve name on pypi, conda? Thomas
-- [ ] make installable by pip for all, by uploading to pypi, Thomas
-- [ ] Use 'colarray' for scalars in Configuration (needs switching of dimensions)
-- [ ] Configuration: include r_im in vectors
-- [ ] Requirements/dependencies, especially to use grid-sync, ADD LINK NUMBA DOC 
-- [X] Auto-tuner, TBS
-- [X] "grid to large for gridsync" should be handled ( CUDA_ERROR_COOPERATIVE_LAUNCH_TOO_LARGE )
-- [ ] structure inside h5py: static info + a group for each runtime action (Lorenzo)
-- [X] Test neighborlist integrity before and during simulations (after each timeblock)
-- [X] Automatic reallocate larger neighborlist when needed, and redo simulation of the last timeblock
-- [X] Benchmarking
-- [ ] Charge (Water, SPCflexible), Jesper et al.
-- [X] Remove NVE_Toxvaerd Nick
-- [ ] Decide status of tools.save_configuration.py (is it necessary? move to Configuration.py ?) Lorenzo
-- [ ] Include support for different types in CalculatorStructureFactor, Ulf
-- [X] More robust procedure for zeroing the forces (right now done by a neighbor list and requires that there be exactly one pair potential present), Thomas
-- [X] Remove imports of rumdpy inside rumdpy modules, Lorenzo
-- [ ] Decide status of gravity interaction, should it be included in planar_interactions, Thomas
-- [ ] NVU integrator (tests missing), Mark
-
-## TODO, long term:
-- [ ] Constraints
-- [ ] EAM metallic potentials, Nick
-- [ ] Use sympy to differentiate pair-potentials. Was implemented but a factor of 2 slower, are float64's sneaking in?
-- [ ] Add CPU support (can it be done as a decorator?)
-- [ ] Thermostat on subsets of particles
 
 ## Various tools/strategies we will use
 - [PEP 8 – Style Guide for Python Code](https://peps.python.org/pep-0008/)
@@ -94,11 +31,13 @@ A good place to see how this is done without implementing all functions twice is
 - Systematic benchmarking. Substantial degradation in performance will be considered a bug.
 
 ## Checklist for developing a new feature
+- Make or comment on an issue (on GitHub) about the new feature.
 - Copy code that resembles what you want to do and modify it to your needs.
 - Write tests in a file placed in tests (run pytest to check that it works).
 - Write an example and place it in examples, add it to the examples/README.md
 - Write documentation in the docstrings of the code (run doctests to check that it works).
 - Include the new feature in the documentation, e.g., you may need to edit docs/source/api.rst
+- Close issue.
 
 ## Some git cmd which might be useful
 
@@ -201,15 +140,27 @@ coverage report -m
 
 or `coverage html`.
 
-## Building documentation
+## Build Jupyter notebooks with tutorials
 
-To building the documentation using sphinx, https://www.sphinx-doc.org
-(needs `pip install myst_nb pydata_sphinx_theme`)
-
-Install the necessary packages:
+Jupyter Notebooks in the tutorial section of the documentation can be built with 
 
 ```sh
-pip install sphinx myst_nb pydata_sphinx_theme
+cd tutorials
+jupyter nbconvert --to notebook --execute --inplace my_first_simulation.ipynb
+jupyter nbconvert --to notebook --execute --inplace post_analysis.ipynb
+cd -
+```
+
+## Building documentation
+
+Heads-up: Build Jupyter notebooks with tutorials (see above), before building the documentation 
+This is not done automatically, since the readthedocs.org server does not support GPU's.
+
+The documentation is build using sphinx: https://www.sphinx-doc.org
+and needs additional packages. Install these with:
+
+```sh 
+pip install -r docs/requirements.txt
 ```
 
 Build documentation webpage:
@@ -230,5 +181,23 @@ Clean the build directory (optional):
 ```sh
 make clean
 ```
+
+## Make new release
+
+1. Update version number in `gamdpy/__init__.py` and `pyproject.toml` to x.y.z
+2. Test code (see above)
+3. Build tutorial notebooks (see above)
+4. Build documentation (see above), and confirm that it looks great.
+5. Push code to github
+6. Make tag: `git tag  x.y.z`
+7. Push tag: `git push --tags`
+8. Goto github and make release (button in right panel)
+9. Add new version readthedocs (should be made automatic)
+10. Update on pypi (requires twine and build)
+    * `rm dist/*`
+    * `python3 -m build --sdist`
+    * `python3 -m build --wheel`
+    * `twine upload dist/*`  (asks for token)
+11. Update version number in `gamdpy/__init__.py` and `pyproject.toml`, x.y.(z+1)dev (or similar)
 
 

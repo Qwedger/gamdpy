@@ -9,13 +9,15 @@ the (experienced) user can extend most aspect of the code, including new integra
 
 [Installation](installation.md)
 
+[Tutorials](tutorials/README.md) Includes instructions on how to try out gamdpy on google.colab, by getting access to a NVIDIA GPU for free.
+
 [Examples](examples/README.md)
 
 [Benchmarks (preliminary)](benchmarks/README.md)
 
 [Info for developers](info_for_developers.md)
 
-## Overall structure of the package
+## Overall structure of the package 
 
 ### 1. Configuration
 A class containing all relevant information about a configuration, including the simulation box (class sim_box). 
@@ -30,6 +32,7 @@ Classes implementing a simulation algorithm. Currently implemented:
 - class NVT_Langevin
 - class NPT_Atomic
 - class NPT_Langevin
+- class GradientDescent
 - class NVU_RT (Experimental)
 
 Temperature/Pressure can be controlled by a user-supplied function, see examples/kablj.py

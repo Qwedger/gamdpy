@@ -2,35 +2,52 @@ import numpy as np
 # LC: check https://orbit.dtu.dk/en/publications/cudarray-cuda-based-numpy
 import numba
 from numba import cuda
-from gamdpy import Configuration
+from gamdpy import Configuration, Orthorhombic
 from gamdpy.misc.make_function import make_function_constant
 from .integrator import Integrator
 
 class NPT_Atomic(Integrator):
-    """ Constant NPT integrator for atomic systems
+    """ Constant NPT integrator for atomic systems.
 
-        Integrator keeping N (number of particles), P (pressure), and T (temperature) constant, 
-        using the leapfrog algorithm and the thermostat-barostat by G Martyna, DJ Tobias and ML Klein in
-        Molecular Physics 87(5), 1117 (1996), `doi:10.1063/1.467468 <https://doi.org/10.1080/00268979600100761>`_
-        Note that the thermostat and barostat states defined here are :math:`p_\\xi/Q` and :math:`p_\\epsilon/W` from Eq. 2.9 in the paper.
+    Integrator that keeps the number of particles (:math:`N`), pressure (:math:`P`),
+    and temperature (:math:`T`) constant, using a Leap-Frog implementation
+    of the Nosé–Hoover thermostat by Martyna–Tuckerman–Klein presented in Ref. [Martyna1996]_.
+    (Note that the thermostat and barostat states in this implementation are defined as
+    :math:`p_\\xi/Q` and :math:`p_\\epsilon/W`, see Eq. 2.9 in the reference.).
 
-        Parameters
-        ----------
-        temperature : float or function
-            Target temperature as a function of time or constant
-        
-        tau : float
-            Thermostat relaxation time
-        
-        pressure : float or function
-            Target pressure as a function of time or constant
-        
-        tau_p : float
-            Barostat relaxation time
-        
-        dt : float
-            Timestep size
-        
+    The thermal and barometric coupling parameters are defined via two time-scales.
+
+    Parameters
+    ----------
+    temperature : float or function
+        Target temperature
+
+    tau : float
+        Thermostat relaxation time
+
+    pressure : float or function
+        Target pressure
+
+    tau_p : float
+        Barostat relaxation time
+
+    dt : float
+        a time step for the integration.
+
+    Raises
+    ------
+    TypeError
+        If the simulation box is not :class:`~gamdpy.Orthorhombic`.
+
+    ValueError
+        If the spatial dimension of the simulation box is not :math:`D=3`.
+
+    References
+    ----------
+    .. [Martyna1996] Glenn J. Martyna, Mark E. Tuckerman, Douglas J. Tobias, and Michael L. Klein,
+       "Explicit Reversible Integrators for Extended Systems Dynamics",
+       Mol. Phys. 87, 1117–57 (1996)
+       https://doi.org/10.1080/00268979600100761
     """
 
     def __init__(self, temperature, tau: float, pressure, tau_p : float, dt: float) -> None: 
@@ -49,7 +66,7 @@ class NPT_Atomic(Integrator):
         mass_t = np.float32((degrees-1)*configuration.D * factor * self.tau   * self.tau  )   # This quantity is the thermostat mass expect for a factor of temperature
         mass_p = np.float32((degrees-1)*configuration.D * factor * self.tau_p * self.tau_p)   # the temperature is missing because at this stage could be a function
         self.barostat_state[2] = configuration.get_volume()                                   # Copy starting volume (can be avoided)
-        # Copy state variables to device
+        # Copy state variables to a device
         self.d_barostat_state   = numba.cuda.to_device(self.barostat_state)
         self.d_thermostat_state = numba.cuda.to_device(self.thermostat_state)
         return (dt, mass_t, mass_p, degrees, self.d_thermostat_state, self.d_barostat_state)   # Needs to be compatible with unpacking in
@@ -57,10 +74,18 @@ class NPT_Atomic(Integrator):
 
     def get_kernel(self, configuration: Configuration, compute_plan: dict, compute_flags:dict, interactions_kernel, verbose=False):
 
+        # This integrator is designed for an Orthorhombic simulation box
+        if not isinstance(configuration.simbox, Orthorhombic):
+            raise TypeError(f"The NPT Langevin integrator expected Orthorhombic simulation box but got {type(configuration.simbox)}")
+
         # Unpack parameters from configuration and compute_plan
         D, num_part = configuration.D, configuration.N
         pb, tp, gridsync = [compute_plan[key] for key in ['pb', 'tp', 'gridsync']] 
         num_blocks = (num_part - 1) // pb + 1
+
+        # This implementation assumes D=3
+        if not D == 3:
+            raise ValueError(f"This integrator expected a simulation box with D=3 but got {D}.")
 
         # Convert temperature to a function if isn't already (better be a number then...)
         if callable(self.temperature):
