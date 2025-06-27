@@ -26,8 +26,12 @@ An simulation box object is attached to an configuration object.
    :members:
 
 
+.. _integrators:
+
 Integrators
 ***********
+
+One of the below integrators should be given as a parameter to the :class:`~gamdpy.Simulation` class.
 
 Constant energy and volume
 ==========================
@@ -44,6 +48,10 @@ Constant temperature and volume
    :exclude-members: get_kernel, get_params
 
 .. autoclass:: gamdpy.NVT_Langevin
+   :members:
+   :exclude-members: get_kernel, get_params
+
+.. autoclass:: gamdpy.Brownian
    :members:
    :exclude-members: get_kernel, get_params
 
@@ -69,9 +77,12 @@ Other integrators
    :members:
    :exclude-members: get_kernel, get_params
 
+.. _interactions:
 
 Interactions
 ************
+
+Interactions are passed in a list to the :class:`~gamdpy.Simulation` class.
 
 Pair potentials
 ===============
@@ -144,8 +155,13 @@ Generators
 
 .. autofunction:: gamdpy.make_fixed_interactions
 
+
+.. _runtime_actions:
+
 Runtime Actions
 ***************
+
+A list of runtime actions are passed as an argument to the :class:`~gamdpy.Simulation` class.
 
 .. autoclass:: gamdpy.TrajectorySaver
 
@@ -204,6 +220,12 @@ Post-analysis tools
 ===================
 
 .. autofunction:: gamdpy.tools.calc_dynamics
+
+.. autofunction:: gamdpy.tools.calculateMolCenterMass
+
+.. autofunction:: gamdpy.tools.calculateMolVelocity
+
+.. autofunction:: gamdpy.tools.calculateMolDipole
 
 Mathematical functions
 ======================

@@ -22,8 +22,7 @@ Open Todo's have been transfered to issues after developer meeting 4/6-25. For r
 ## Various tools/strategies we will use
 - [PEP 8 – Style Guide for Python Code](https://peps.python.org/pep-0008/)
 - Git ( https://git-scm.com/doc, https://git-scm.com/book/en/v2/Git-Branching-Branches-in-a-Nutshell ).
-- Sphinx ( https://www.sphinx-doc.org/ ) for documentation, 
-- ... to be hosted on readthedocs ( https://about.readthedocs.com/ ). Model: https://numba.readthedocs.io.
+- Sphinx ( https://www.sphinx-doc.org/ ) for documentation. See https://numpydoc.readthedocs.io/en/latest/format.html for style of docstrings.
 - Hypothesis (property-based testing, https://hypothesis.readthedocs.io ).
 - doctest (no more failing examples in examples/docs!, see colarray.py for example).
 - Jupyter notebooks for tutorials. Testing: nbmake?, testbook?
@@ -37,7 +36,8 @@ Open Todo's have been transfered to issues after developer meeting 4/6-25. For r
 - Write an example and place it in examples, add it to the examples/README.md
 - Write documentation in the docstrings of the code (run doctests to check that it works).
 - Include the new feature in the documentation, e.g., you may need to edit docs/source/api.rst
-- Close issue.
+- Close issue (if relevant)
+- Update CHANGELOG.md so it is announced in the next release.
 
 ## Some git cmd which might be useful
 
@@ -75,6 +75,9 @@ Reset all changes.
 ```sh
 git reset HEAD --hard
 ```
+
+[Handling pull-requests](https://docs.github.com/en/pull-requests/collaborating-with-pull-requests/reviewing-changes-in-pull-requests/checking-out-pull-requests-locally)
+
 
 ## How to test the code
 Running `pytest` in root (gamdpy) directory will run all tests.
@@ -115,6 +118,12 @@ Test scripts are located in the `tests` directory. Most can be executed (in a ve
 
 ```bash
 python3 tests/test_examples.py
+```
+
+or using pytest
+
+```bash
+pytest --override-ini addopts="" tests/test_LJ_nxyz.py::test_nvt_langevin
 ```
 
 Running doctest of a single file:
