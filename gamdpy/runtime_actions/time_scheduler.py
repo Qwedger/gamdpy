@@ -2,7 +2,7 @@ import numpy as np
 import math
 
 
-class TimeScheduler():
+class BaseScheduler():
     """
     Class used to:
         - define steps to save configuration at;
@@ -29,12 +29,8 @@ class TimeScheduler():
     The list `runtime_actions` must then be passed to a Simulation instance.
     """
 
-    def __init__(self, schedule='log2', **kwargs):
-
+    def __init__(self):
         self.known_schedules = ['log2', 'log', 'lin', 'geom']
-        # self.known_schedules = ['log2', 'log', 'lin', 'geom', 'custom']
-        self.schedule = schedule
-        self._kwargs = kwargs
 
     def setup(self, stepmax, ntimeblocks):
         # This is necessary aside from __init__ because in TrajectorySaver
@@ -43,8 +39,18 @@ class TimeScheduler():
         # `stepmax` is by construction the same as `steps_per_timeblock` in TrajectorySaver
         # it makes sense to keep it as an attribute since it may be needed in the future for other schedules
         self.stepmax = stepmax
-        self.ntimeblocks = ntimeblocks
+        self.ntimeblocks = ntimeblocks # currentòy not used
 
+        self.stepcheck_func = self._get_stepcheck()
+        self.steps, self.indexes = self._compute_steps()
+        # self.stepsall = self._compute_stepsall()
+
+        # TODO: dreprecate this
+        # if self.schedule=='geom':
+        #     # the 'geom' schedule must return each save index only once; this must be after _compute_steps()
+        #     assert self.nsaves==self.npoints, 'Too many points, schedule distorsion; try fewer points'
+
+        '''
         # no specific kwarg is required
         if self.schedule=='log2':
             self.stepcheck_func = self._get_stepcheck_log2()
@@ -79,14 +85,33 @@ class TimeScheduler():
         # TODO: using custom steps would require passing arrays to stepcheck functions, which is a potential issue
         # elif self.schedule=='custom':
         #     pass
+        '''
 
-        self.steps = self._compute_steps()
-        # self.stepsall = self._compute_stepsall()
-        if self.schedule=='geom':
-            # the 'geom' schedule must return each save index only once; this must be after _compute_steps()
-            assert self.nsaves==self.npoints, 'Too many points, schedule distorsion; try fewer points'
+    def _get_stepcheck(self):
+        # This method should be implemented by subclasses
+        raise NotImplementedError("Subclasses must implement this method")
 
-    def _get_stepcheck_log2(self):
+    def _compute_steps(self):
+        steps = []
+        indexes = []
+        # we want to include the last step IFF it raises a True flag
+        for step in range(self.stepmax+1):
+            flag, idx = self.stepcheck_func(step)
+            if flag: 
+                steps.append(step)
+                indexes.append(idx)
+        return np.array(steps), np.array(indexes)
+
+    @property
+    def nsaves(self):
+        return len(self.steps)
+
+class Logarithmic2(BaseScheduler):
+
+    def __init__(self):
+        super().__init__()
+
+    def _get_stepcheck(self):
         def stepcheck(step):
             flag = False
             idx = -1 # this is for python calls of the function
@@ -102,28 +127,14 @@ class TimeScheduler():
             return flag, idx
         return stepcheck
 
-    # def _get_stepcheck_log(self):
-    #     base = self.base
-    #     def stepcheck(step):
-    #         if step==0 or step==1:
-    #             return True, step
-    #         prev_int = 1
-    #         current = 1.0
-    #         idx = 1
-    #         while True:
-    #             current *= base
-    #             curr_int = int(current)
-    #             if curr_int != prev_int:
-    #                 idx += 1
-    #                 if curr_int == step:
-    #                     return True, idx
-    #                 if curr_int > step:
-    #                     break
-    #                 prev_int = curr_int            
-    #         return False, -1
-    #     return stepcheck
+class Logarithmic(BaseScheduler):
+    
+    # def __init__(self, base=np.exp(1.0)):
+    def __init__(self, base):
+        super().__init__()
+        self.base = base
 
-    def _get_stepcheck_log(self):
+    def _get_stepcheck(self):
         base = self.base
         def stepcheck(step):
             # determine flag
@@ -149,7 +160,17 @@ class TimeScheduler():
                         idx += 1
             return True, idx
         return stepcheck
-    
+
+class Linear(BaseScheduler):
+
+    def __init__(self, steps_between_output, npoints=None):
+        super().__init__()
+        if npoints is None:
+            self.deltastep = steps_between_output
+        else:
+            # this needs testing
+            self.deltastep = self.stepmax // npoints
+
     def _get_stepcheck_lin(self):
         deltastep = self.deltastep
         def stepcheck(step):
@@ -158,7 +179,13 @@ class TimeScheduler():
             return False, -1
         return stepcheck
 
-    def _get_stepcheck_geom(self):
+class Geometric(BaseScheduler):
+
+    def __init__(self, npoints):
+        super().__init__()
+        self.npoints = npoints
+
+    def _get_stepcheck(self):
         stepmax = self.stepmax
         npoints = self.npoints
         def stepcheck(step):
@@ -171,44 +198,3 @@ class TimeScheduler():
                     return True, idx
             return False, -1
         return stepcheck
-
-    def _compute_steps(self):
-        steps = []
-        # we want to include the last step IFF it raises a True flag
-        for step in range(self.stepmax+1):
-            flag, _ = self.stepcheck_func(step)
-            if flag: steps.append(step)
-        # if stepmax not in steps: steps.append(stepmax)
-        return np.unique(np.array(steps))
-
-    @property
-    def nsaves(self):
-        return len(self.steps)
-
-    # def _compute_stepsall(self):
-    #     try:
-    #         stepmax = self.stepmax
-    #         ntimeblocks = self.ntimeblocks
-    #     except AttributeError:
-    #         print('probably setup() has not been called yet')
-    #     steps = []
-    #     for step in range(stepmax+1):
-    #         flag, _ = self.stepcheck_func(step)
-    #         if flag: steps.append(step)
-    #     overallsteps = []
-    #     for i_block in range(ntimeblocks):
-    #         for step in steps:
-    #             overallstep = step+stepmax*i_block
-    #             overallsteps.append(overallstep)
-    #     if stepmax not in steps: 
-    #         overallsteps.append(stepmax*ntimeblocks)
-    #     return overallsteps
-
-
-    # @property
-    # def nsavesall(self):
-    #     try:
-    #         return len(self.stepsall)
-    #     except AttributeError:
-    #         print('probably setup() has not been called yet')
-
