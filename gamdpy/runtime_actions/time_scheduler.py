@@ -31,6 +31,7 @@ class BaseScheduler():
 
     def __init__(self):
         self.known_schedules = ['log2', 'log', 'lin', 'geom']
+        self.stepmax = 10000
 
     def setup(self, stepmax, ntimeblocks):
         # This is necessary aside from __init__ because in TrajectorySaver
@@ -39,7 +40,9 @@ class BaseScheduler():
         # `stepmax` is by construction the same as `steps_per_timeblock` in TrajectorySaver
         # it makes sense to keep it as an attribute since it may be needed in the future for other schedules
         self.stepmax = stepmax
-        self.ntimeblocks = ntimeblocks # currentòy not used
+        self.ntimeblocks = ntimeblocks # currently not used
+        # with open('debug.txt', 'w') as f:
+        #     f.write(str(self.stepmax))
 
         self.stepcheck_func = self._get_stepcheck()
         self.steps, self.indexes = self._compute_steps()
@@ -163,15 +166,18 @@ class Logarithmic(BaseScheduler):
 
 class Linear(BaseScheduler):
 
-    def __init__(self, steps_between_output, npoints=None):
+    def __init__(self, steps_between_output=None, npoints=None):
         super().__init__()
-        if npoints is None:
-            self.deltastep = steps_between_output
-        else:
-            # this needs testing
-            self.deltastep = self.stepmax // npoints
+        self.steps_between_output = steps_between_output
+        self.npoints = npoints
 
-    def _get_stepcheck_lin(self):
+    def _get_stepcheck(self):
+        # this must go here because the needed super() attributes are defined in setup(), not __init__()
+        if self.steps_between_output is not None and self.npoints is None:
+            self.deltastep = self.steps_between_output
+        elif self.npoints is not None:
+            # this needs testing
+            self.deltastep = self.stepmax // self.npoints
         deltastep = self.deltastep
         def stepcheck(step):
             if step%deltastep==0:
