@@ -1,33 +1,48 @@
 import numpy as np
 import math
 
+"""
+Time scheduler classes. They are used to:
+    - define steps to save configuration at;
+    - get functions for the numba kernel to check whether to save.
+
+The BaseScheduler class defines common methods and attributes, while only
+child classes instances can be passed to TrajectorySaver to be functional.
+
+Example:
+
+    ..code-block:: Python
+        import gamdpy as gp
+        runtime_actions = [gp.TrajectorySaver(scheduler=gp.Logarithmic2()),]
+
+Then runtime_actions list can be passed to a Simulation instance.
+"""
+
 
 class BaseScheduler():
     """
-    Time scheduler abstract class.
+    Time scheduler abstract base class. It mainly contains the setup()
+    method that is called by TrajectorySaver.
+    
+    Child classed must implement the _get_stepcheck() method to return the 
+    function to be compiled with numba.njit(). Such function must take only
+    the current `step` as input and return a flag and the save index.
+    Here is a template to define a new child class.
 
-    Class used to:
-        - define steps to save configuration at;
-        - get functions for the numba kernel to check whether to save.
+        ..code-block:: Python
 
-    An instance of TimeScheduler must be passed to TrajectorySaver, either explicitly or implicitly
+            class MyScheduler(BaseScheduler):
+            
+                def __init__(self, mykeyword):
+                    super().__init__()
+                    self.mykeyword = mykeyword
 
-    Example:
-
-    ..code-block:: python
-        import gamdpy as gp
-        scheduler = gp.TimeScheduler(schedule='log', base=1.5)
-        runtime_actions = [gp.TrajectorySaver(schedule=scheduler),]
-
-    alternatively
-
-    ..code-block:: python
-        import gamdpy as gp
-        runtime_actions = [gp.TrajectorySaver(schedule='log', base=1.5),]
-
-    See below for indications about kwargs required by different schedules. 
-    Default is 'log2', which does not require any arguments.
-    The list `runtime_actions` must then be passed to a Simulation instance.
+                def _get_stepcheck(self):
+                    # here all attributes can be retrieved
+                    def stepcheck(step):
+                        # define steps to save at and their indexes
+                        pass
+                    return stepcheck
     """
 
     def __init__(self):
