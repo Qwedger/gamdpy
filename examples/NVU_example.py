@@ -88,7 +88,7 @@ print("Step 3/3: Running the NVU simulation using the final configuration",
       f"constant-potential energy: U_0 = {np.round(U_0,3)} (pr particle)")
 for i in range(2): print()
 #Setting up the NVU integrator and simulation. Note, that dt = dl.
-NVU_integrator = gp.integrators.NVU(U_0 = U_0, dt = dl)
+NVU_integrator = gp.integrators.NVU(U_0 = U_0, dl = dl)
 
 runtime_actions = [gp.MomentumReset(100),
                     gp.TrajectorySaver(),

@@ -14,14 +14,14 @@ class NVU():
         The potential energy (pr particle) to keep the system at. 
         If a function, it should take time as argument.
     
-    dt : float
+    dl : float
         The length to move along the constant potential energy landscape per integration step.
     
     """
 
-    def __init__(self, U_0, dt: float) -> None:
+    def __init__(self, U_0, dl: float) -> None:
         self.U_0 = U_0
-        self.dt = dt
+        self.dt = dl
         self.f_dot_v = np.zeros(1, dtype = np.float32)
         self.f_dot_f = np.zeros(1, dtype = np.float32)
         self.denominator = np.zeros(1, dtype = np.float32)

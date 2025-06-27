@@ -48,8 +48,8 @@ def test_NVU():
     df = pd.DataFrame(data.T, columns=columns)
     U_0 = np.mean(df['U'])/configuration.N
 
-    #Setting up the NVU integrator and simulation. Note, that dt = dl.
-    NVU_integrator = gp.integrators.NVU(U_0 = U_0, dt = 0.03)
+    #Setting up the NVU integrator and simulation.
+    NVU_integrator = gp.integrators.NVU(U_0 = U_0, dl = 0.03)
     runtime_actions = [gp.MomentumReset(100),
                        gp.ScalarSaver(2, {'Fsq':True, 'lapU':True}), ]
     NVU_sim = gp.Simulation(configuration, pairpot, NVU_integrator, runtime_actions,
@@ -109,8 +109,8 @@ def test_NVU():
     df = pd.DataFrame(data.T, columns=columns)
     U_0 = np.mean(df['U'])/configuration.N
 
-    #Setting up the NVU integrator and simulation. Note, that dt = dl.
-    NVU_integrator = gp.integrators.NVU(U_0 = U_0, dt = 0.03)
+    #Setting up the NVU integrator and simulation.
+    NVU_integrator = gp.integrators.NVU(U_0 = U_0, dl = 0.03)
     runtime_actions = [gp.MomentumReset(100),
                         gp.ScalarSaver(2, {'Fsq':True, 'lapU':True}), ]
     NVU_sim = gp.Simulation(configuration, pairpot, NVU_integrator, runtime_actions,
