@@ -4,12 +4,13 @@ import math
 
 class BaseScheduler():
     """
+    Time scheduler abstract class.
+
     Class used to:
         - define steps to save configuration at;
         - get functions for the numba kernel to check whether to save.
 
     An instance of TimeScheduler must be passed to TrajectorySaver, either explicitly or implicitly
-    (i.e. passing appropriate keywords to TrajectorySaver, that will create an instance of TimeScheduler).
 
     Example:
 
@@ -31,7 +32,6 @@ class BaseScheduler():
 
     def __init__(self):
         self.known_schedules = ['log2', 'log', 'lin', 'geom']
-        self.stepmax = 10000
 
     def setup(self, stepmax, ntimeblocks):
         # This is necessary aside from __init__ because in TrajectorySaver
@@ -41,54 +41,9 @@ class BaseScheduler():
         # it makes sense to keep it as an attribute since it may be needed in the future for other schedules
         self.stepmax = stepmax
         self.ntimeblocks = ntimeblocks # currently not used
-        # with open('debug.txt', 'w') as f:
-        #     f.write(str(self.stepmax))
 
         self.stepcheck_func = self._get_stepcheck()
         self.steps, self.indexes = self._compute_steps()
-        # self.stepsall = self._compute_stepsall()
-
-        # TODO: dreprecate this
-        # if self.schedule=='geom':
-        #     # the 'geom' schedule must return each save index only once; this must be after _compute_steps()
-        #     assert self.nsaves==self.npoints, 'Too many points, schedule distorsion; try fewer points'
-
-        '''
-        # no specific kwarg is required
-        if self.schedule=='log2':
-            self.stepcheck_func = self._get_stepcheck_log2()
-
-        # `base` kwarg is accepted but not required (default is Euler number)
-        elif self.schedule=='log':
-            self.base = self._kwargs.get('base', np.exp(1.0))
-            self.stepcheck_func = self._get_stepcheck_log()
-
-        # `steps_between_output` kwarg is required
-        elif self.schedule=='lin':
-            deltastep = self._kwargs.get('steps_between_output', None)
-            npoints = self._kwargs.get('npoints', None)
-            if deltastep is not None:
-                self.deltastep = deltastep
-                self.stepcheck_func = self._get_stepcheck_lin()
-            elif npoints is not None:
-                raise NotImplementedError("Passing 'npoints' to 'lin' schedule should be possible")
-                #self.npoints = npoints
-            else:
-                raise TypeError("'steps_between_output' or 'npoints' is required for schedule 'lin'")
-
-        # `npoints` kwarg is required
-        elif self.schedule=='geom':
-            npoints = self._kwargs.get('npoints', None)
-            if npoints is not None:
-                self.npoints = npoints
-                self.stepcheck_func = self._get_stepcheck_geom()
-            else:
-                raise TypeError("'npoints' is required for schedule 'geom'")
-
-        # TODO: using custom steps would require passing arrays to stepcheck functions, which is a potential issue
-        # elif self.schedule=='custom':
-        #     pass
-        '''
 
     def _get_stepcheck(self):
         # This method should be implemented by subclasses
@@ -108,6 +63,7 @@ class BaseScheduler():
     @property
     def nsaves(self):
         return len(self.steps)
+
 
 class Logarithmic2(BaseScheduler):
 
@@ -129,6 +85,7 @@ class Logarithmic2(BaseScheduler):
                     idx = b + 1
             return flag, idx
         return stepcheck
+
 
 class Logarithmic(BaseScheduler):
     
@@ -164,6 +121,7 @@ class Logarithmic(BaseScheduler):
             return True, idx
         return stepcheck
 
+
 class Linear(BaseScheduler):
 
     def __init__(self, steps_between_output=None, npoints=None):
@@ -184,6 +142,7 @@ class Linear(BaseScheduler):
                 return True, step//deltastep
             return False, -1
         return stepcheck
+
 
 class Geometric(BaseScheduler):
 
