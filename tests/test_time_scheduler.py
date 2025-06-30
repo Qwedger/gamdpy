@@ -10,11 +10,12 @@ ntimeblocks = 10
 
 def test_base():
     base_scheduler = BaseScheduler()
+    # this method must be implemented by subclasses
     with pytest.raises(NotImplementedError):
         base_scheduler.setup(stepmax=stepmax, ntimeblocks=ntimeblocks)
 
 def test_log2():
-    time_scheduler = Logarithmic2()
+    time_scheduler = Log2()
     time_scheduler.setup(stepmax, ntimeblocks)
     try_steps = time_scheduler.steps
     try_indexes = time_scheduler.indexes
@@ -32,7 +33,7 @@ def test_log2():
 
 def test_log():
     base = 1.1
-    time_scheduler = Logarithmic(base=base)
+    time_scheduler = Log(base=base)
     time_scheduler.setup(stepmax, ntimeblocks)
     try_steps = time_scheduler.steps
     try_indexes = time_scheduler.indexes
@@ -51,7 +52,7 @@ def test_log():
 
 def test_lin_deltastep():
     deltastep = 51
-    time_scheduler = Linear(steps_between_output=deltastep)
+    time_scheduler = Lin(steps_between=deltastep)
     time_scheduler.setup(stepmax, ntimeblocks)
     try_steps = time_scheduler.steps
     try_indexes = time_scheduler.indexes
@@ -64,7 +65,7 @@ def test_lin_deltastep():
 def test_lin_npoints():
     npoints = 13
     deltastep = stepmax // npoints
-    time_scheduler = Linear(npoints=npoints)
+    time_scheduler = Lin(npoints=npoints)
     time_scheduler.setup(stepmax, ntimeblocks)
     try_steps = time_scheduler.steps
     try_indexes = time_scheduler.indexes
@@ -76,7 +77,7 @@ def test_lin_npoints():
 
 def test_geom():
     npoints = 13
-    time_scheduler = Geometric(npoints=npoints)
+    time_scheduler = Geom(npoints=npoints)
     time_scheduler.setup(stepmax, ntimeblocks)
     try_steps = time_scheduler.steps
     try_indexes = time_scheduler.indexes

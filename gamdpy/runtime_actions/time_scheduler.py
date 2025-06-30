@@ -80,7 +80,7 @@ class BaseScheduler():
         return len(self.steps)
 
 
-class Logarithmic2(BaseScheduler):
+class Log2(BaseScheduler):
 
     def __init__(self):
         super().__init__()
@@ -102,7 +102,7 @@ class Logarithmic2(BaseScheduler):
         return stepcheck
 
 
-class Logarithmic(BaseScheduler):
+class Log(BaseScheduler):
     
     # def __init__(self, base=np.exp(1.0)):
     def __init__(self, base):
@@ -137,17 +137,17 @@ class Logarithmic(BaseScheduler):
         return stepcheck
 
 
-class Linear(BaseScheduler):
+class Lin(BaseScheduler):
 
-    def __init__(self, steps_between_output=None, npoints=None):
+    def __init__(self, steps_between=None, npoints=None):
         super().__init__()
-        self.steps_between_output = steps_between_output
+        self.steps_between = steps_between
         self.npoints = npoints
 
     def _get_stepcheck(self):
         # this must go here because the needed super() attributes are defined in setup(), not __init__()
-        if self.steps_between_output is not None and self.npoints is None:
-            self.deltastep = self.steps_between_output
+        if self.steps_between is not None and self.npoints is None:
+            self.deltastep = self.steps_between
         elif self.npoints is not None:
             # this needs testing
             self.deltastep = self.stepmax // self.npoints
@@ -159,7 +159,7 @@ class Linear(BaseScheduler):
         return stepcheck
 
 
-class Geometric(BaseScheduler):
+class Geom(BaseScheduler):
 
     def __init__(self, npoints):
         super().__init__()

@@ -27,35 +27,27 @@ runtime_actions = [gp.ScalarSaver(),
 
 ############################## TIME SCHEDULING ##############################
 
-# Create an instance of TimeScheduler, with keywords appropriate to the shedule.
-# The schedule will be used in each time block of the simulation.
+# Append to runtime_actions a TrajectorySaver with an instance of a 
+# time scheduling class as `scheduler`. This schedule will be used 
+# in each time block of the simulation.
+# (Un)comment the line corresponing to the time schedule of choice.
 
 # log2 schedule (also default option, if no option is given)
-scheduler_log2 = gp.Logarithmic2()
+runtime_actions.append(gp.TrajectorySaver(scheduler=gp.Log2()))
 
 # Logarithmic schedule with real base.
 # Smaller bases give denser trajectory samplings
-scheduler_log = gp.Logarithmic(base=1.5)
+#runtime_actions.append(gp.TrajectorySaver(scheduler=gp.Log(base=1.5)))
 
 # Linear schedule with number of steps between saves
-scheduler_lin1 = gp.Linear(steps_between_output=100)
+#runtime_actions.append(gp.TrajectorySaver(scheduler=gp.Lin(steps_between=100)))
 
 # Linear schedule with number of saves
-scheduler_lin1 = gp.Linear(npoints=10)
+#runtime_actions.append(gp.TrajectorySaver(scheduler=gp.Lin(npoints=10)))
 
 # Geometric schedule: logarithmic spacing with base chosen to get `npoints` saves
-scheduler_geom = gp.Geometric(npoints=10)
+#runtime_actions.append(gp.TrajectorySaver(scheduler=gp.Geom(npoints=10)))
 
-# Pass the chosen scheduler instance to TrajectorySaver and add it to runtime_actions
-trajectory_saver = gp.TrajectorySaver(scheduler=scheduler_log2)
-runtime_actions.append(trajectory_saver)
-
-"""
-Of course everything can be done in one line
-
-        ..code-block:: python
-                runtime_actions.append(gp.TrajectorySaver(scheduler=gp.Logarithmic(base=1.5)))
-"""
 
 #############################################################################
 
