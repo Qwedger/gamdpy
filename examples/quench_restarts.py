@@ -16,7 +16,7 @@ from scipy.optimize import minimize
 Tconf_switch = 1e-4 # Do gradient descent until Tconf_switch is reached
 include_cg = True   # ... and then do conjugate gradient if this flag is True
 steps_between_output=32 # For gd integrator
-num_restarts = 2 # Number of restarts to quench 
+num_restarts = 8 # Number of restarts to quench 
 
 gp.select_gpu()
 
@@ -26,9 +26,9 @@ if __name__ == "__main__":
     if argv:
         filename = argv.pop(0) # get filename
     else:
-        filename = 'Data/KABLJ_Rho1.200_T0.800_toread.h5' # Used in testing
+        filename = 'Data/KABLJ_Rho1.200_T0.400_toread.h5' # Used in testing
 else:
-    filename = 'Data/KABLJ_Rho1.200_T0.800_toread.h5' # Used in testing
+    filename = 'Data/KABLJ_Rho1.200_T0.400_toread.h5' # Used in testing
 
 # function to interface with minimize function from scipy
 def calc_u(Rflat):

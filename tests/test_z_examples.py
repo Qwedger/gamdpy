@@ -161,3 +161,7 @@ class Test_examples:
 
     def test_quench_restarts(self): 
         self.make_one("quench_restarts")
+
+    def test_quench_trajectory(self): 
+        self.make_one("quench_trajectory", ['Data/KABLJ_Rho1.200_T0.800_toread_quench.h5', ])
+
