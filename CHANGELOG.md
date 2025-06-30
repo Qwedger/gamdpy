@@ -5,6 +5,7 @@
 ### New features
 * Integrator for Brownian dynamics.
 * Integrator for gradient descent.
+* Integrator for NVU dynamics.
 
 ### Bug fixes
 
