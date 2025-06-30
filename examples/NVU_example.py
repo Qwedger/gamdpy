@@ -32,8 +32,8 @@ cut = np.array(sig)*2.5
 pair_pot = gp.PairPotential(pair_func, params=[sig, eps, cut], max_num_nbs=1000)
 
 
-Ttarget_function = gp.make_function_ramp(value0=2.000,       x0=4*1024*64*0.004*(1/8),
-                                          value1=temperature, x1=4*1024*64*0.004*(1/4))
+Ttarget_function = gp.make_function_ramp(value0=2.000,       x0=1024*64*0.004*(1/8),
+                                          value1=temperature, x1=1024*64*0.004*(1/4))
 print()
 print("Step 1/3: Running a NVT simulation with a temperature ramp from T=2.0",
       "to 0.8")
@@ -46,7 +46,7 @@ runtime_actions = [gp.MomentumReset(100),
                    #gp.ScalarSaver(2),
                    gp.TrajectorySaver() ,]
 NVT_sim = gp.Simulation(configuration, pair_pot, NVT_integrator, runtime_actions,
-                    num_timeblocks=64, steps_per_timeblock=4*1024,
+                    num_timeblocks=64, steps_per_timeblock=1024,
                     storage="memory")
 
 
@@ -65,7 +65,7 @@ runtime_actions = [gp.MomentumReset(100),
 
 NVT_integrator = gp.integrators.NVT(temperature = temperature, tau = 0.2, dt = 0.004)
 NVT_sim = gp.Simulation(configuration, pair_pot, NVT_integrator, runtime_actions,
-                        num_timeblocks = 32, steps_per_timeblock = 8*1024,
+                        num_timeblocks = 64, steps_per_timeblock = 1024,
                         storage = 'memory')
 
 
@@ -95,7 +95,7 @@ runtime_actions = [gp.MomentumReset(100),
                     gp.ScalarSaver(4*128, {'Fsq':True, 'lapU':True}), ]
 
 NVU_sim = gp.Simulation(configuration, pair_pot, NVU_integrator, runtime_actions,
-                        num_timeblocks = 32, steps_per_timeblock = 32*1024, #num_timeblocks = 32
+                        num_timeblocks = 32, steps_per_timeblock = 8*1024, #num_timeblocks = 32
                         storage = 'memory')
 
 
