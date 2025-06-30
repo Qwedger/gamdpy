@@ -3,7 +3,7 @@ import numba
 from numba import cuda, config
 
 from .runtime_action import RuntimeAction
-from .time_scheduler import Logarithmic2
+from .time_scheduler import Log2
 
 class TrajectorySaver(RuntimeAction):
     """ 
@@ -11,7 +11,7 @@ class TrajectorySaver(RuntimeAction):
     Does logarithmic saving.
     """
 
-    def __init__(self, scheduler=Logarithmic2(), include_simbox=False, verbose=False, compression="gzip", compression_opts=4) -> None:
+    def __init__(self, scheduler=Log2(), include_simbox=False, verbose=False, compression="gzip", compression_opts=4) -> None:
         
         self.scheduler = scheduler
         self.include_simbox = include_simbox
