@@ -29,18 +29,18 @@ from .simulation.get_default_compute_plan import get_default_compute_plan
 from .simulation.get_default_compute_flags import get_default_compute_flags
 
 # Import from integrators subpackage
-from .integrators import integrator, NVE, NVT, NVT_Langevin, NPT_Atomic, NPT_Langevin, SLLOD, NVU_RT, GradientDescent
+from .integrators import integrator, NVE, NVT, NVT_Langevin, Brownian, NPT_Atomic, NPT_Langevin, SLLOD, NVU_RT, GradientDescent
 
 # Import from interactions subpackage
 from .interactions import interaction, add_interactions_list, NbList2, NbListLinkedLists
-from .interactions import PairPotential
+from .interactions import PairPotential, TabulatedPairPotential
 from .interactions import Bonds, Angles, Dihedrals
 from .interactions import make_fixed_interactions, make_planar_calculator, setup_planar_interactions
 from .interactions import Gravity, Relaxtemp, Tether
 from .interactions.potential_functions import *
 
 # Import from runtime_actions subpackage (Actions that can be inserted into the stimulation  kernel)
-from .runtime_actions import RuntimeAction, add_runtime_actions_list, TrajectorySaver, RestartSaver, ScalarSaver, MomentumReset, StressSaver, extract_stress_tensor
+from .runtime_actions import RuntimeAction, add_runtime_actions_list, TrajectorySaver, RestartSaver, ScalarSaver, MomentumReset, StressSaver, extract_stress_tensor, TimeScheduler
 
 # Import from calculators subpackage
 from .calculators import CalculatorHydrodynamicCorrelations, CalculatorHydrodynamicProfile, CalculatorWidomInsertion

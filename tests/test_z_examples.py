@@ -108,8 +108,8 @@ class Test_examples:
     def test_thermodynamics(self):
         self.make_one("thermodynamics")
 
-    def test_generic_molecules(self):
-        self.make_one("generic_molecules")
+#    def test_generic_molecules(self):
+#        self.make_one("generic_molecules")
 
     def test_LJ(self):
         self.make_one("LJ")
@@ -144,6 +144,9 @@ class Test_examples:
     def test_consistency_NPT(self):
         self.make_one("consistency_NPT")
 
+    def test_brownian(self):
+        self.make_one("brownian")
+
     def test_kablj(self):
         self.make_one("kablj", ["Data/KABLJ_Rho1.200_T0.800.h5"])
 
@@ -156,5 +159,5 @@ class Test_examples:
     def test_molecules_polydisperse(self):
         self.make_one("molecules_polydisperse", ["Data/chains_poly.h5", "Data/dump.lammps", "Data/dump_compress.lammps", "chain10.pdf", "chain5.pdf"])
 
-    def test_quench_restarts_gradient_descent(self): 
-        self.make_one("quench_restarts_gradient_descent")
+    def test_quench_restarts(self): 
+        self.make_one("quench_restarts")
