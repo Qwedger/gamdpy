@@ -10,31 +10,31 @@ from .integrator import Integrator
 
 
 class NVT_Langevin(Integrator):
-    """ NVT Langevin Leap-frog integrator.
+    r""" NVT Langevin Leap-frog integrator.
 
     Leap-Frog implementation of the algorithm described in Ref. [Grønbech2014]_.
     This integrator is a stochastic thermostat that keeps the system at a constant temperature,
     via the Langevin equations of motion
 
     .. math::
-        m \ddot x = f - \\alpha \dot x + \\beta
+        m \ddot x = f - \alpha \dot x + \beta
 
     where :math:`f` is the force from a conservative field, :math:`m` is the particle mass,
-    :math:`\\alpha` is a friction coefficient, and :math:`\\beta` is uncorrelated Gauss distributed noise:
-    :math:`\\langle \\beta(t)\\rangle=0` and :math:`\\langle \\beta(t)\\beta(t')\\rangle=2\\alpha k_B T\delta(t-t')`
-    where :math:`T` is the target temperature.
-    For choosing the :math:`\\alpha` parameters, it is instructive to note that a characteristic timescale is given by
+    :math:`\alpha` is a friction coefficient, and :math:`\beta` is uncorrelated Gauss distributed noise:
+    :math:`\langle \beta(t)\rangle=0` and :math:`\langle \beta(t)\beta(t')\rangle=2\alpha T\delta(t-t')`
+    where :math:`T` is the target temperature. Temperature is in reduced units where :math:`k_B=1`.
+    For choosing the :math:`\alpha` parameters, it is instructive to note that a characteristic timescale is given by
 
-    .. math:: \\tau = m/\\alpha
+    .. math:: \tau = m/\alpha.
 
     Parameters
     ----------
 
     temperature : float or function
-        Temperature of the thermostat. If a function, it must take a single argument, time, and return a float.
+        Temperature of the thermostat, :math:`T`. If a function, it must take a single argument, time, and return a float.
 
     alpha : float
-        Friction coefficient of the thermostat.
+        Friction coefficient of the thermostat, :math:`\alpha`.
 
     dt : float
         a time step for the integration.
