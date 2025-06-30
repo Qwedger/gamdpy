@@ -1,4 +1,4 @@
-""" Example of possible uses of TimeScheduler, to make TrajectorySaver more flexible.
+""" Example of possible uses of time scheduling classes, for a flexible TrajectorySaver.
 
 Based on minimal.py
 """
@@ -31,24 +31,30 @@ runtime_actions = [gp.ScalarSaver(),
 # The schedule will be used in each time block of the simulation.
 
 # log2 schedule (also default option, if no option is given)
-scheduler0 = gp.TimeScheduler(schedule='log2')
+scheduler_log2 = gp.Logarithmic2()
 
-# Logarithmic schedule with real basis (default base is Euler number)
+# Logarithmic schedule with real base.
 # Smaller bases give denser trajectory samplings
-scheduler1 = gp.TimeScheduler(schedule='log', base=1.5)
+scheduler_log = gp.Logarithmic(base=1.5)
 
 # Linear schedule with number of steps between saves
-scheduler2 = gp.TimeScheduler(schedule='lin', steps_between_output=100)
+scheduler_lin1 = gp.Linear(steps_between_output=100)
 
-# Pass chosen scheduler instance to TrajectorySaver and add it to runtime_actions
-runtime_actions.append(gp.TrajectorySaver(schedule=scheduler0))
+# Linear schedule with number of saves
+scheduler_lin1 = gp.Linear(npoints=10)
+
+# Geometric schedule: logarithmic spacing with base chosen to get `npoints` saves
+scheduler_geom = gp.Geometric(npoints=10)
+
+# Pass the chosen scheduler instance to TrajectorySaver and add it to runtime_actions
+trajectory_saver = gp.TrajectorySaver(scheduler=scheduler_log2)
+runtime_actions.append(trajectory_saver)
 
 """
-Alternatively, if keyword arguments are passed to TrajectorySaver, it will
-automatically create and use an appropriate TimeScheduler instance. E.g.:
+Of course everything can be done in one line
 
-..code-block:: python
-        runtime_actions.append(gp.TrajectorySaver(schedule='log', base=1.5))
+        ..code-block:: python
+                runtime_actions.append(gp.TrajectorySaver(scheduler=gp.Logarithmic(base=1.5)))
 """
 
 #############################################################################

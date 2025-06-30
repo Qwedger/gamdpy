@@ -7,7 +7,7 @@ Time scheduler classes. They are used to:
     - get functions for the numba kernel to check whether to save.
 
 The BaseScheduler class defines common methods and attributes, while only
-child classes instances can be passed to TrajectorySaver to be functional.
+child classes instances can be passed to TrajectorySaver for it to be functional.
 
 Example:
 
