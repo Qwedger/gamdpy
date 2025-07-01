@@ -113,6 +113,9 @@ class Test_examples:
 
     def test_LJ(self):
         self.make_one("LJ")
+ 
+    def test_time_schedules(self):
+        self.make_one("time_schedules")
     
     def test_D4(self):
         self.make_one("D4")

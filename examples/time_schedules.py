@@ -54,7 +54,7 @@ runtime_actions.append(gp.TrajectorySaver(scheduler=gp.Log2()))
 # Setup Simulation. 
 sim = gp.Simulation(configuration, [pair_pot], integrator, runtime_actions,
                     num_timeblocks=32, steps_per_timeblock=1*1024,
-                    storage='LJ_T0.70.h5')
+                    storage='memory')
 
 # Run simulation
 for timeblock in sim.run_timeblocks():
