@@ -2,61 +2,126 @@ import numpy as np
 import numba
 import math
 from numba import cuda
-import matplotlib.pyplot as plt
 import gamdpy as gp
 from .interaction import Interaction
 
 class TabulatedPairPotential(Interaction):
     """ Pair potential """
 
-    def __init__(self, pairpotential_table, r0, dr, params, max_num_nbs, exclusions=None):
+    def __init__(self, table_filename, params, max_num_nbs, exclusions=None):
         def params_function(i_type, j_type, params):
             result = params[i_type, j_type]            # default: read from params array
             return result            
     
 
-        self.potentialfunction_table = pairpotential_table
-        self.r0 = r0
-        self.dr = dr
+        self.read_potential_file(table_filename)
+
+        def pairpotential_function(ij_dist, ij_params, coefficients_array):
+            Rmin, dr = ij_params[0], ij_params[1]
+            loc = (ij_dist - Rmin)/dr
+            index =  int(loc) # which interval this value of r is located
+            two = numba.float32(2.0)
+            three = numba.float32(3.0)
+            six = numba.float32(6.0)
+
+            if index < 0:
+                index = 0
+            elif index >= len(coefficients_array):
+                index = len(coefficients_array) -1
+
+            eps = loc - index # where in the given interval, r is located, goes from 0 to 1 (unless outside the range of the table)
+            c = coefficients_array[index,:]
+            v_interp = c[0] + eps * (c[1] + eps * (c[2] + eps * c[3]))
+            v_prime = c[1] + eps * (two*c[2] + eps * three * c[3])
+
+            s = - v_prime / ij_dist / dr # divide by dr to convert to derivative wrt r
+            v_pp = (two*c[2] + six*c[3] * eps) / (dr*dr)  # divide by dr squared to convert to (second) derivative wrt r
+            return v_interp, s, v_pp
+
+        self.pairpotential_function = pairpotential_function
         self.params_function = params_function
         self.params_user = params
         self.exclusions = exclusions 
         self.max_num_nbs = max_num_nbs
 
-    def convert_user_params(self):
-        # Upgrade any scalar parameters to 1x1 numpy array
-        num_params = len(self.params_user)
-        params_list = []
-        for parameter in self.params_user:
-            if np.isscalar(parameter):
-                params_list.append(np.ones((1,1))*parameter)
-            else:
-                params_list.append(np.array(parameter, dtype=np.float32))
 
-        # Ensure all parameters are the right format (num_types x num_types) numpy arrays
-        num_types = params_list[0].shape[0]
-        for parameter in params_list:
-            assert len(parameter.shape) == 2
-            assert parameter.shape[0] == num_types
-            assert parameter.shape[1] == num_types
+    def read_single_table_from_file(self, pot_file, next_line):
+        while next_line.startswith('#') or next_line == "\n":
+            next_line = pot_file.readline()
 
-        # Convert params to the format required by kernels (num_types x num_types) array of tuples (p0, p1, ..., cutoff)
+        keyword = next_line.strip()
+        params = pot_file.readline().split()
+        assert params[0] == 'N'
+        N = int(params[1])
+        if params[2] != 'R' or len(params) != 5:
+            raise ValueError('Only format N <N> R <rlo> <rhi> is supported')
+
+        Rmin = float(params[3])
+        Rmax = float(params[4])
+        dr = (Rmax-Rmin)/(N-1)
+        pot_table = np.zeros((N, 4))
+        for idx in range(N):
+            next_line = pot_file.readline()
+            items = [float(x) for x in next_line.split()]
+            pot_table[idx, :]  = np.array(items)
+
+        return keyword, Rmin, dr, Rmax, pot_table
+
+    def read_potential_file(self, filename):
+        with open(filename, 'r') as potential_file:
+            next_line = potential_file.readline()
+            pot_tables = {}
+            table_params = {}
+            while next_line != "":
+                label, Rmin, dr, Rmax, pot_table = self.read_single_table_from_file(potential_file, next_line)
+                pot_tables[label] = pot_table
+                table_params[label] = (Rmin, dr, Rmax)
+                next_line = potential_file.readline()
+        self.pot_tables = pot_tables
+        self.table_params = table_params
+
+
+    def generate_coefficients_array(self, dr, pot_table):
+        """ This version can handle tables for different type pairs"""
+        n_pts = len(pot_table) - 1
+        coeffs = np.zeros((n_pts, 4), dtype=np.float32)
+        #coeffs = np.zeros((n_pts, 4), dtype=np.float64)
+        for index in range(n_pts):
+            v0, v1 = pot_table[index:index+2,2]
+            vp0, vp1 = pot_table[index:index+2,3] * dr
+            coeffs[index, :] = v0, vp0, 3*(v1-v0) - 2*vp0 - vp1, 2*(v0-v1) + vp0 + vp1
+        return coeffs
+
+
+    def extract_params(self):
+        """ This function extracts key params from data that was in the potential file"""
+
+        num_params = 3
+        num_types = len(self.params_user)
         params = np.zeros((num_types, num_types), dtype="f,"*num_params)
+        all_coefficients = []
+        cut_list = []
         for i in range(num_types):
+            assert len(self.params_user[i]) == num_types
+            these_coefficients = []
             for j in range(num_types):
-                plist = []
-                for parameter in params_list:
-                    plist.append(parameter[i,j])
-                params[i,j] = tuple(plist)
+                label = self.params_user[i][j]
+                Rmin, dr, Rmax = self.table_params[label]
+                params[i,j] = (Rmin, dr, Rmax)
+                cut_list.append(Rmax)
+                these_coefficients.append(self.generate_coefficients_array(dr, self.pot_tables[label]))
+            all_coefficients.append(these_coefficients)
 
-        max_cut = np.float32(np.max(params_list[-1]))
 
-        return params, max_cut
+        max_cut = np.float32(max(cut_list))
+
+        return params, all_coefficients, max_cut
                
     def evaluate_potential_function(self, r, types):
-        params, max_cut = self.convert_user_params()
-        u, s, lap = self.pairpotential_function(r, params[types[0], types[1]])
-        return u
+        params, all_coefficients, max_cut = self.extract_params()
+        u, s, lap = self.pairpotential_function(r, params[types[0], types[1]], all_coefficients[0][0])
+        #return u
+        return u, s, lap
 
 
     def check_datastructure_validity(self) -> bool:
@@ -66,29 +131,15 @@ class TabulatedPairPotential(Interaction):
         return True
 
 
-    def generate_coefficients_array(self):
-        """ Generate an array with shape (n-1) x 4, where n is the number of points in the
-        potential function table"""
-        n_pts = len(self.potentialfunction_table) - 1
-        dr = self.dr
-        coeffs = np.zeros((n_pts, 4))
-
-        for index in range(n_pts):
-            v0, v1 = self.potentialfunction_table[index:index+2,0]
-            vp0, vp1 = self.potentialfunction_table[index:index+2,1] * dr
-            # factor dr is because here we want the derivative wrt eps not wrt r
-            coeffs[index, :] = v0, vp0, 3*(v1-v0) - 2*vp0 - vp1, 2*(v0-v1) + vp0 + vp1
-        return coeffs
-
-    
     def get_params(self, configuration: gp.Configuration, compute_plan: dict, verbose=False) -> tuple:
-        
-        self.params, max_cut = self.convert_user_params()
+
+        self.params, self.all_coefficients, max_cut = self.extract_params()
         self.d_params = cuda.to_device(self.params)
 
-        
-        self.d_coefficients_array = cuda.to_device(self.generate_coefficients_array())
-        
+        # Use only the 0,0 entry to start with. NEEDS FIXING!!!!
+        self.d_coefficients_array = cuda.to_device(self.all_coefficients[0][0])
+
+
         if compute_plan['nblist'] == 'N squared':
             self.nblist = gp.NbList2(configuration, self.exclusions, self.max_num_nbs)
         elif compute_plan['nblist'] == 'linked lists':
@@ -138,34 +189,15 @@ class TabulatedPairPotential(Interaction):
                         sw_id = configuration.vectors.indices['sw']
 
 
-        r0, dr = self.r0, self.dr # hard-coded into the kernel
         #pairpotential_function = self.pairpotential_function
-        def pairpotential_function(ij_dist, coefficients_array):
-            loc = (ij_dist - r0)/dr
-            index =  int(loc) # which interval this value of r is located
-
-            if index < 0:
-                index = 0
-            elif index >= len(coefficients_array):
-                index = len(coefficients_array) -1
-        
-            eps = loc - index # where in the given interval, r is located, goes from 0 to 1 (unless outside the range of the table)
-            c = coefficients_array[index,:]
-            v_interp = c[0] + eps * (c[1] + eps * (c[2] + eps * c[3]))
-            v_prime = c[1] + eps * (2.*c[2] + eps * 3. * c[3])
-
-            s = - v_prime / ij_dist / dr # divide by dr to convert to derivative wrt r
-            v_pp = (2.*c[2] + 6.*c[3] * eps) / (dr*dr)  # divide by dr squared to convert to (second) derivative wrt r
-            return v_interp, s, v_pp
-
-        pairpotential_function = numba.njit(pairpotential_function)
+        pairpotential_function = numba.njit(self.pairpotential_function)
 
         if UtilizeNIII:
             virial_factor_NIII = numba.float32( 1.0/configuration.D)
             #def pairpotential_calculator(ij_dist, ij_params, dr, my_f, cscalars, my_stress, f, other_id):
-            def pairpotential_calculator(ij_dist, coefficients_array, dr, my_f, cscalars, my_stress, f, other_id):
+            def pairpotential_calculator(ij_dist, ij_params, coefficients_array, dr, my_f, cscalars, my_stress, f, other_id):
                 #u, s, umm = pairpotential_function(ij_dist, ij_params)
-                u, s, umm = pairpotential_function(ij_dist, coefficients_array)
+                u, s, umm = pairpotential_function(ij_dist, ij_params, coefficients_array)
                 for k in range(D):
                     cuda.atomic.add(f, (other_id, k), dr[k]*s)
                     my_f[k] = my_f[k] - dr[k]*s                         # Force
@@ -186,9 +218,9 @@ class TabulatedPairPotential(Interaction):
         else:
             virial_factor = numba.float32( 0.5/configuration.D )
             #def pairpotential_calculator(ij_dist, ij_params, dr, my_f, cscalars, my_stress, f, other_id):
-            def pairpotential_calculator(ij_dist, coefficients_array, dr, my_f, cscalars, my_stress, f, other_id):
+            def pairpotential_calculator(ij_dist, ij_params, coefficients_array, dr, my_f, cscalars, my_stress, f, other_id):
                 #u, s, umm = pairpotential_function(ij_dist, ij_params)
-                u, s, umm = pairpotential_function(ij_dist, coefficients_array)
+                u, s, umm = pairpotential_function(ij_dist, ij_params, coefficients_array)
                 half = numba.float32(0.5)
                 for k in range(D):
                     my_f[k] = my_f[k] - dr[k]*s                         # Force
@@ -251,7 +283,7 @@ class TabulatedPairPotential(Interaction):
                     cut = ij_params[-1]
                     if dist_sq < cut*cut:
                         #pairpotential_calculator(math.sqrt(dist_sq), ij_params, my_dr, my_f, my_cscalars, my_stress, vectors[f_id], other_id)
-                        pairpotential_calculator(math.sqrt(dist_sq), coefficients_array, my_dr, my_f, my_cscalars, my_stress, vectors[f_id], other_id)
+                        pairpotential_calculator(math.sqrt(dist_sq), ij_params, coefficients_array, my_dr, my_f, my_cscalars, my_stress, vectors[f_id], other_id)
                 for k in range(D):
                     cuda.atomic.add(vectors[f_id], (global_id, k), my_f[k])
                     if compute_stresses:
