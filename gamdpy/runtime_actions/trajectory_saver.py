@@ -23,6 +23,12 @@ class TrajectorySaver(RuntimeAction):
             self.compression_opts = None
         #self.sid = {"r":0, "r_im":1}
 
+    def extract_positions(h5file, timeblock, configuration):
+        return h5file['trajectory_saver/positions'][timeblock, configuration, :, :]
+
+    def extract_images(h5file, timeblock, configuration):
+        return h5file['trajectory_saver/images'][timeblock, configuration, :, :]
+
     def setup(self, configuration, num_timeblocks: int, steps_per_timeblock: int, output, verbose=False) -> None:
         self.configuration = configuration
 

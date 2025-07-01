@@ -104,10 +104,10 @@ with h5py.File(quench_filename, "w") as f:
 for saved_timeblock in range(num_timeblocks):
 
     for saved_conf in range(num_configurations):
-        configuration1['r'] = output['trajectory_saver/positions'][saved_timeblock,saved_conf,:,:]
-        configuration2['r'] = output['trajectory_saver/positions'][saved_timeblock,saved_conf,:,:]
-        configuration1.r_im = output['trajectory_saver/images'][saved_timeblock,saved_conf,:,:]
-        configuration2.r_im = output['trajectory_saver/images'][saved_timeblock,saved_conf,:,:]
+        configuration1['r'] = gp.TrajectorySaver.extract_positions(output, saved_timeblock, saved_conf)
+        configuration2['r'] = gp.TrajectorySaver.extract_positions(output, saved_timeblock, saved_conf)
+        configuration1.r_im = gp.TrajectorySaver.extract_images(output, saved_timeblock, saved_conf) 
+        configuration2.r_im = gp.TrajectorySaver.extract_images(output, saved_timeblock, saved_conf)
 
         # Run simulation, i.e., gradient descent
         for timeblock in sim.run_timeblocks():
