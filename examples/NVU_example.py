@@ -121,10 +121,10 @@ plt.xlabel(r"$t\cdot some\ constant$")
 plt.ylabel(r"$<(\Delta \mathbf{r})^2>$")
 plt.xlim(0.001)
 plt.ylim(0.1**5)
-plt.show()
+if __name__ == "__main__":
+    plt.show(block=False)
+
 #Calculating the configurational temperature
-
-
 columns = ['U', 'lapU', 'Fsq', 'W']
 data = np.array(gp.extract_scalars(NVU_sim.output, columns, first_block=16))
 df = pd.DataFrame(data.T, columns=columns)
@@ -140,7 +140,8 @@ plt.plot((0,times),(temperature,temperature), label = f"Set temperature (T = {te
 plt.ylabel("Temperature")
 plt.xlabel("t")
 plt.legend()
-plt.show()
+if __name__ == "__main__":
+    plt.show(block=False)
 
 plt.figure(figsize=(10,4))
 plt.plot(np.arange(len(df['U']))*128*4*dl,df['U']/configuration.N, label = "U(t)")
@@ -148,4 +149,6 @@ plt.plot((0,times),(U_0,U_0), label = f"U_0 = {np.round(U_0,3)}")
 plt.ylabel("Potential energy")
 plt.xlabel("t")
 plt.legend()
-plt.show()
+
+if __name__ == "__main__":
+    plt.show(block=True)
