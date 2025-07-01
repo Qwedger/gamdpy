@@ -1,4 +1,4 @@
-""" Example of possible uses of TimeScheduler, to make TrajectorySaver more flexible.
+""" Example of possible uses of time scheduling classes, for a flexible TrajectorySaver.
 
 Based on minimal.py
 """
@@ -27,29 +27,27 @@ runtime_actions = [gp.ScalarSaver(),
 
 ############################## TIME SCHEDULING ##############################
 
-# Create an instance of TimeScheduler, with keywords appropriate to the shedule.
-# The schedule will be used in each time block of the simulation.
+# Append to runtime_actions a TrajectorySaver with an instance of a 
+# time scheduling class as `scheduler`. This schedule will be used 
+# in each time block of the simulation.
+# (Un)comment the line corresponing to the time schedule of choice.
 
 # log2 schedule (also default option, if no option is given)
-scheduler0 = gp.TimeScheduler(schedule='log2')
+runtime_actions.append(gp.TrajectorySaver(scheduler=gp.Log2()))
 
-# Logarithmic schedule with real basis (default base is Euler number)
+# Logarithmic schedule with real base.
 # Smaller bases give denser trajectory samplings
-scheduler1 = gp.TimeScheduler(schedule='log', base=1.5)
+#runtime_actions.append(gp.TrajectorySaver(scheduler=gp.Log(base=1.5)))
 
 # Linear schedule with number of steps between saves
-scheduler2 = gp.TimeScheduler(schedule='lin', steps_between_output=100)
+#runtime_actions.append(gp.TrajectorySaver(scheduler=gp.Lin(steps_between=100)))
 
-# Pass chosen scheduler instance to TrajectorySaver and add it to runtime_actions
-runtime_actions.append(gp.TrajectorySaver(schedule=scheduler0))
+# Linear schedule with number of saves
+#runtime_actions.append(gp.TrajectorySaver(scheduler=gp.Lin(npoints=10)))
 
-"""
-Alternatively, if keyword arguments are passed to TrajectorySaver, it will
-automatically create and use an appropriate TimeScheduler instance. E.g.:
+# Geometric schedule: logarithmic spacing with base chosen to get `npoints` saves
+#runtime_actions.append(gp.TrajectorySaver(scheduler=gp.Geom(npoints=10)))
 
-..code-block:: python
-        runtime_actions.append(gp.TrajectorySaver(schedule='log', base=1.5))
-"""
 
 #############################################################################
 

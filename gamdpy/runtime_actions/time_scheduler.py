@@ -1,40 +1,52 @@
 import numpy as np
 import math
 
+"""
+Time scheduler classes. They are used to:
+    - define steps to save configuration at;
+    - get functions for the numba kernel to check whether to save.
 
-class TimeScheduler():
-    """
-    Class used to:
-        - define steps to save configuration at;
-        - get functions for the numba kernel to check whether to save.
+The BaseScheduler class defines common methods and attributes, while only
+child classes instances can be passed to TrajectorySaver for it to be functional.
 
-    An instance of TimeScheduler must be passed to TrajectorySaver, either explicitly or implicitly
-    (i.e. passing appropriate keywords to TrajectorySaver, that will create an instance of TimeScheduler).
+Example:
 
-    Example:
-
-    ..code-block:: python
+    ..code-block:: Python
         import gamdpy as gp
-        scheduler = gp.TimeScheduler(schedule='log', base=1.5)
-        runtime_actions = [gp.TrajectorySaver(schedule=scheduler),]
+        runtime_actions = [gp.TrajectorySaver(scheduler=gp.Logarithmic2()),]
 
-    alternatively
+Then runtime_actions list can be passed to a Simulation instance.
+"""
 
-    ..code-block:: python
-        import gamdpy as gp
-        runtime_actions = [gp.TrajectorySaver(schedule='log', base=1.5),]
 
-    See below for indications about kwargs required by different schedules. 
-    Default is 'log2', which does not require any arguments.
-    The list `runtime_actions` must then be passed to a Simulation instance.
+class BaseScheduler():
+    """
+    Time scheduler abstract base class. It mainly contains the setup()
+    method that is called by TrajectorySaver.
+    
+    Child classed must implement the _get_stepcheck() method to return the 
+    function to be compiled with numba.njit(). Such function must take only
+    the current `step` as input and return a flag and the save index.
+    Here is a template to define a new child class.
+
+        ..code-block:: Python
+
+            class MyScheduler(BaseScheduler):
+            
+                def __init__(self, mykeyword):
+                    super().__init__()
+                    self.mykeyword = mykeyword
+
+                def _get_stepcheck(self):
+                    # here all attributes can be retrieved
+                    def stepcheck(step):
+                        # define steps to save at and their indexes
+                        pass
+                    return stepcheck
     """
 
-    def __init__(self, schedule='log2', **kwargs):
-
+    def __init__(self):
         self.known_schedules = ['log2', 'log', 'lin', 'geom']
-        # self.known_schedules = ['log2', 'log', 'lin', 'geom', 'custom']
-        self.schedule = schedule
-        self._kwargs = kwargs
 
     def setup(self, stepmax, ntimeblocks):
         # This is necessary aside from __init__ because in TrajectorySaver
@@ -43,50 +55,37 @@ class TimeScheduler():
         # `stepmax` is by construction the same as `steps_per_timeblock` in TrajectorySaver
         # it makes sense to keep it as an attribute since it may be needed in the future for other schedules
         self.stepmax = stepmax
-        self.ntimeblocks = ntimeblocks
+        self.ntimeblocks = ntimeblocks # currently not used
 
-        # no specific kwarg is required
-        if self.schedule=='log2':
-            self.stepcheck_func = self._get_stepcheck_log2()
+        self.stepcheck_func = self._get_stepcheck()
+        self.steps, self.indexes = self._compute_steps()
 
-        # `base` kwarg is accepted but not required (default is Euler number)
-        elif self.schedule=='log':
-            self.base = self._kwargs.get('base', np.exp(1.0))
-            self.stepcheck_func = self._get_stepcheck_log()
+    def _get_stepcheck(self):
+        # This method should be implemented by subclasses
+        raise NotImplementedError("Subclasses must implement this method")
 
-        # `steps_between_output` kwarg is required
-        elif self.schedule=='lin':
-            deltastep = self._kwargs.get('steps_between_output', None)
-            npoints = self._kwargs.get('npoints', None)
-            if deltastep is not None:
-                self.deltastep = deltastep
-                self.stepcheck_func = self._get_stepcheck_lin()
-            elif npoints is not None:
-                raise NotImplementedError("Passing 'npoints' to 'lin' schedule should be possible")
-                #self.npoints = npoints
-            else:
-                raise TypeError("'steps_between_output' or 'npoints' is required for schedule 'lin'")
+    def _compute_steps(self):
+        steps = []
+        indexes = []
+        # we want to include the last step IFF it raises a True flag
+        for step in range(self.stepmax+1):
+            flag, idx = self.stepcheck_func(step)
+            if flag: 
+                steps.append(step)
+                indexes.append(idx)
+        return np.array(steps), np.array(indexes)
 
-        # `npoints` kwarg is required
-        elif self.schedule=='geom':
-            npoints = self._kwargs.get('npoints', None)
-            if npoints is not None:
-                self.npoints = npoints
-                self.stepcheck_func = self._get_stepcheck_geom()
-            else:
-                raise TypeError("'npoints' is required for schedule 'geom'")
+    @property
+    def nsaves(self):
+        return len(self.steps)
 
-        # TODO: using custom steps would require passing arrays to stepcheck functions, which is a potential issue
-        # elif self.schedule=='custom':
-        #     pass
 
-        self.steps = self._compute_steps()
-        # self.stepsall = self._compute_stepsall()
-        if self.schedule=='geom':
-            # the 'geom' schedule must return each save index only once; this must be after _compute_steps()
-            assert self.nsaves==self.npoints, 'Too many points, schedule distorsion; try fewer points'
+class Log2(BaseScheduler):
 
-    def _get_stepcheck_log2(self):
+    def __init__(self):
+        super().__init__()
+
+    def _get_stepcheck(self):
         def stepcheck(step):
             flag = False
             idx = -1 # this is for python calls of the function
@@ -102,28 +101,15 @@ class TimeScheduler():
             return flag, idx
         return stepcheck
 
-    # def _get_stepcheck_log(self):
-    #     base = self.base
-    #     def stepcheck(step):
-    #         if step==0 or step==1:
-    #             return True, step
-    #         prev_int = 1
-    #         current = 1.0
-    #         idx = 1
-    #         while True:
-    #             current *= base
-    #             curr_int = int(current)
-    #             if curr_int != prev_int:
-    #                 idx += 1
-    #                 if curr_int == step:
-    #                     return True, idx
-    #                 if curr_int > step:
-    #                     break
-    #                 prev_int = curr_int            
-    #         return False, -1
-    #     return stepcheck
 
-    def _get_stepcheck_log(self):
+class Log(BaseScheduler):
+    
+    # def __init__(self, base=np.exp(1.0)):
+    def __init__(self, base):
+        super().__init__()
+        self.base = base
+
+    def _get_stepcheck(self):
         base = self.base
         def stepcheck(step):
             # determine flag
@@ -149,8 +135,22 @@ class TimeScheduler():
                         idx += 1
             return True, idx
         return stepcheck
-    
-    def _get_stepcheck_lin(self):
+
+
+class Lin(BaseScheduler):
+
+    def __init__(self, steps_between=None, npoints=None):
+        super().__init__()
+        self.steps_between = steps_between
+        self.npoints = npoints
+
+    def _get_stepcheck(self):
+        # this must go here because the needed super() attributes are defined in setup(), not __init__()
+        if self.steps_between is not None and self.npoints is None:
+            self.deltastep = self.steps_between
+        elif self.npoints is not None:
+            # this needs testing
+            self.deltastep = self.stepmax // self.npoints
         deltastep = self.deltastep
         def stepcheck(step):
             if step%deltastep==0:
@@ -158,7 +158,14 @@ class TimeScheduler():
             return False, -1
         return stepcheck
 
-    def _get_stepcheck_geom(self):
+
+class Geom(BaseScheduler):
+
+    def __init__(self, npoints):
+        super().__init__()
+        self.npoints = npoints
+
+    def _get_stepcheck(self):
         stepmax = self.stepmax
         npoints = self.npoints
         def stepcheck(step):
@@ -171,44 +178,3 @@ class TimeScheduler():
                     return True, idx
             return False, -1
         return stepcheck
-
-    def _compute_steps(self):
-        steps = []
-        # we want to include the last step IFF it raises a True flag
-        for step in range(self.stepmax+1):
-            flag, _ = self.stepcheck_func(step)
-            if flag: steps.append(step)
-        # if stepmax not in steps: steps.append(stepmax)
-        return np.unique(np.array(steps))
-
-    @property
-    def nsaves(self):
-        return len(self.steps)
-
-    # def _compute_stepsall(self):
-    #     try:
-    #         stepmax = self.stepmax
-    #         ntimeblocks = self.ntimeblocks
-    #     except AttributeError:
-    #         print('probably setup() has not been called yet')
-    #     steps = []
-    #     for step in range(stepmax+1):
-    #         flag, _ = self.stepcheck_func(step)
-    #         if flag: steps.append(step)
-    #     overallsteps = []
-    #     for i_block in range(ntimeblocks):
-    #         for step in steps:
-    #             overallstep = step+stepmax*i_block
-    #             overallsteps.append(overallstep)
-    #     if stepmax not in steps: 
-    #         overallsteps.append(stepmax*ntimeblocks)
-    #     return overallsteps
-
-
-    # @property
-    # def nsavesall(self):
-    #     try:
-    #         return len(self.stepsall)
-    #     except AttributeError:
-    #         print('probably setup() has not been called yet')
-

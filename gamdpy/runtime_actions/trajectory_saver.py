@@ -3,7 +3,7 @@ import numba
 from numba import cuda, config
 
 from .runtime_action import RuntimeAction
-from .time_scheduler import TimeScheduler
+from .time_scheduler import Log2
 
 class TrajectorySaver(RuntimeAction):
     """ 
@@ -11,8 +11,9 @@ class TrajectorySaver(RuntimeAction):
     Does logarithmic saving.
     """
 
-    def __init__(self, schedule='log2', include_simbox=False, verbose=False, compression="gzip", compression_opts=4, **kwargs) -> None:
-
+    def __init__(self, scheduler=Log2(), include_simbox=False, verbose=False, compression="gzip", compression_opts=4) -> None:
+        
+        self.scheduler = scheduler
         self.include_simbox = include_simbox
         self.num_vectors = 2  # 'r' and 'r_im' (for now!)
         self.compression = compression
@@ -21,15 +22,6 @@ class TrajectorySaver(RuntimeAction):
         else:
             self.compression_opts = None
         #self.sid = {"r":0, "r_im":1}
-
-        if isinstance(schedule, TimeScheduler):
-            # in this case the user must have set up the scheduler
-            self.time_scheduler = schedule
-        elif schedule in TimeScheduler().known_schedules:
-            # otherwise check if an option was given (specific kwargs must be passed here, if any)
-            self.time_scheduler = TimeScheduler(schedule=schedule, **kwargs)
-        else:
-            raise ValueError('Invalid choice for time schedule')
 
     def setup(self, configuration, num_timeblocks: int, steps_per_timeblock: int, output, verbose=False) -> None:
         self.configuration = configuration
@@ -44,10 +36,10 @@ class TrajectorySaver(RuntimeAction):
 
         # pass the number of steps to the scheduler
         # without this line the scheduler does nothing at all
-        self.time_scheduler.setup(stepmax=self.steps_per_timeblock, ntimeblocks=self.num_timeblocks)
+        self.scheduler.setup(stepmax=self.steps_per_timeblock, ntimeblocks=self.num_timeblocks)
 
         # both steps '0' and the last one are already counted by the scheduler
-        self.conf_per_block = self.time_scheduler.nsaves# + 1 
+        self.conf_per_block = self.scheduler.nsaves# + 1 
         #self.conf_per_block = int(math.log2(self.steps_per_timeblock)) + 2  # Should be user controllable
         
         # Setup output
@@ -69,7 +61,8 @@ class TrajectorySaver(RuntimeAction):
                 chunks=(1, 1, self.configuration.N, self.configuration.D),
                 dtype=np.int32,  compression=self.compression, compression_opts=self.compression_opts)
         output['trajectory_saver'].attrs['compression_info'] = f"{self.compression} with opts {self.compression_opts}"
-        output['trajectory_saver'].attrs['steps'] = self.time_scheduler.steps
+        output['trajectory_saver'].attrs['steps'] = self.scheduler.steps
+        output['trajectory_saver'].attrs['scheduler'] = self.scheduler.__class__.__name__
         output['trajectory_saver'].attrs['num_timeblocks'] = self.num_timeblocks
         output['trajectory_saver'].attrs['steps_per_timeblock'] = self.steps_per_timeblock
 
@@ -150,7 +143,7 @@ class TrajectorySaver(RuntimeAction):
         r_id, = [configuration.vectors.indices[key] for key in ['r', ]]
 
         # get function to check steps in the kernel, already compiled
-        stepcheck_function = numba.njit(getattr(self.time_scheduler, 'stepcheck_func'))
+        stepcheck_function = numba.njit(getattr(self.scheduler, 'stepcheck_func'))
 
         def kernel(grid, vectors, scalars, r_im, sim_box, step, conf_saver_params):
             if include_simbox:
