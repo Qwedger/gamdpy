@@ -6,6 +6,7 @@ Simulation of a Lennard-Jones crystal in the NVT ensemble.
 
 import numpy as np
 import gamdpy as gp
+import matplotlib.pyplot as plt
 
 # Setup configuration: FCC Lattice
 configuration = gp.Configuration(D=3)
@@ -14,15 +15,24 @@ configuration['m'] = 1.0
 configuration.randomize_velocities(temperature=0.7)
 
 # Setup pair potential: Single component 12-6 Lennard-Jones
-#pair_func = gp.apply_shifted_potential_cutoff(gp.LJ_12_6_sigma_epsilon)
 
-sig, eps, cut = 1.0, 1.0, 2.5
+labels = [['KABLJ_AA', 'KABLJ_AB'],['KABLJ_AB', 'KABLJ_BB']]
 
+pair_pot = gp.TabulatedPairPotential('tab_LJ_LAMMPS.dat', params=labels, max_num_nbs=1000)
+table = np.loadtxt('temp_SF.dat')
 
-tab_pot = np.loadtxt("tab_LJ.dat")
-r0 = tab_pot[0,0]
-dr = tab_pot[1,0] - r0
-pair_pot = gp.TabulatedPairPotential(tab_pot[:,1:3], r0, dr, params=[sig, eps, cut], max_num_nbs=1000)
+pfunction_LJ = gp.apply_shifted_force_cutoff(gp.LJ_12_6_sigma_epsilon)
+
+r_values = np.arange(0.6, 2.5, 0.001)
+v_analytic = np.zeros_like(r_values)
+v_table = np.zeros_like(r_values)
+params_analytic = (1.0, 1.0, 2.5)
+for idx in range(len(r_values)):
+    v, s, v2 = pfunction_LJ(r_values[idx], params_analytic)
+    v_analytic[idx] = s
+    v, s, v2 = pair_pot.evaluate_potential_function(r_values[idx], (0,0))
+    v_table[idx] = s
+
 
 # Setup integrator: NVT
 integrator = gp.integrators.NVT(temperature=0.7, tau=0.2, dt=0.005)
