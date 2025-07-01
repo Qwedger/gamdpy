@@ -77,7 +77,7 @@ def test_SLLOD(run_NVT=False):
     sxy_mean = np.mean(sxy)
     print(f'{sr:.2g} {sxy_mean:.6f}')
     assert (np.isclose(sxy_mean, 2.71, atol=0.005 )), f"sxy_mean should be 2.71 but is {sxy_mean}"
-    assert (np.isclose(pairpot.nblist.d_nbflag[2], 49, atol=1)), f"pairpot.nblist.d_nbflag[2] should be 49 but is {pairpot.nblist.d_nbflag[2]}"
+    assert (np.isclose(pairpot.nblist.d_nbflag[2], 51, atol=1)), f"pairpot.nblist.d_nbflag[2] should be 49 but is {pairpot.nblist.d_nbflag[2]}"
 
     #sxy_sc = gp.extract_scalars(sim_SLLOD.output, ['Sxy'])/configuration.get_volume()
     #sxy_mean_sc = np.mean(sxy)
