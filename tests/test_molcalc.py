@@ -21,9 +21,9 @@ def test_molprop():
     configuration = gp.replicate_molecules([dict_test_mol], [nmols], safety_distance=3.0)
     configuration.randomize_velocities(temperature=1.0, seed=1216)
 
-    rmol, mmol = gp.tools.calculateMolCenterMass(configuration, 'test_mol')
-    vmol = gp.tools.calculateMolVelocity(configuration, 'test_mol')
-    dmol = gp.tools.calculateMolDipole(configuration, charges, 'test_mol') [0]
+    rmol, mmol = gp.tools.calculate_molecular_center_of_masses(configuration, 'test_mol')
+    vmol = gp.tools.calculate_molecular_velocities(configuration, 'test_mol')
+    dmol = gp.tools.calculate_molecular_dipoles(configuration, charges, 'test_mol') [0]
 
     dmag = np.sqrt(dmol[0,0]**2 + dmol[0,1]**2 + dmol[0,2]**2)
 
@@ -40,10 +40,4 @@ def test_molprop():
 if __name__ == '__main__':
     
     test_molprop()
-
-
-
-
-
-
 

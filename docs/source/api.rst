@@ -1,21 +1,24 @@
+===
 API
-###
+===
 
+.. toctree::
+   :maxdepth: 1
 
 The Simulation Class
-********************
+--------------------
 
 .. autoclass:: gamdpy.Simulation
    :members:
 
 The Configuration Class
-***********************
+-----------------------
 
 .. autoclass:: gamdpy.Configuration
    :members:
 
 Simulation boxes
-================
+~~~~~~~~~~~~~~~~
 
 An simulation box object is attached to an configuration object.
 
@@ -29,19 +32,19 @@ An simulation box object is attached to an configuration object.
 .. _integrators:
 
 Integrators
-***********
+-----------
 
 One of the below integrators should be given as a parameter to the :class:`~gamdpy.Simulation` class.
 
 Constant energy and volume
-==========================
+~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 .. autoclass:: gamdpy.NVE
    :members:
    :exclude-members: get_kernel, get_params
 
 Constant temperature and volume
-===============================
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 .. autoclass:: gamdpy.NVT
    :members:
@@ -56,7 +59,7 @@ Constant temperature and volume
    :exclude-members: get_kernel, get_params
 
 Constant temperature and pressure
-=================================
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 .. autoclass:: gamdpy.NPT_Atomic
    :members:
@@ -67,7 +70,7 @@ Constant temperature and pressure
    :exclude-members: get_kernel, get_params
 
 Other integrators
-=================
+~~~~~~~~~~~~~~~~~
 
 .. autoclass:: gamdpy.SLLOD
    :members:
@@ -80,18 +83,18 @@ Other integrators
 .. _interactions:
 
 Interactions
-************
+------------
 
 Interactions are passed in a list to the :class:`~gamdpy.Simulation` class.
 
 Pair potentials
-===============
+~~~~~~~~~~~~~~~
 
 .. autoclass:: gamdpy.PairPotential
    :members:
 
 Functions (pair potentials)
----------------------------
+^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 .. autofunction:: gamdpy.LJ_12_6
 
@@ -104,12 +107,12 @@ Functions (pair potentials)
 .. autofunction:: gamdpy.SAAP
 
 Functions (bonds)
----------------------------
+^^^^^^^^^^^^^^^^^
 
 .. autofunction:: gamdpy.harmonic_bond_function
 
 Generators
-----------
+^^^^^^^^^^
 
 Generators return a function that can be used to calculate the potential energy and the force between two particles.
 
@@ -122,7 +125,7 @@ Generators return a function that can be used to calculate the potential energy 
 .. autofunction:: gamdpy.make_IPL_n
 
 Modifies
---------
+^^^^^^^^
 
 Modifies are typically used to smoothly truncate the potential at a certain distance.
 
@@ -131,10 +134,10 @@ Modifies are typically used to smoothly truncate the potential at a certain dist
 .. autofunction:: gamdpy.apply_shifted_force_cutoff
 
 Fixed interactions
-==================
+~~~~~~~~~~~~~~~~~~
 
 Classes
--------
+^^^^^^^
 
 .. autoclass:: gamdpy.Bonds
 
@@ -147,7 +150,7 @@ Classes
 .. autoclass:: gamdpy.Relaxtemp
 
 Generators
-----------
+^^^^^^^^^^
 
 .. autofunction:: gamdpy.make_planar_calculator
 
@@ -159,7 +162,7 @@ Generators
 .. _runtime_actions:
 
 Runtime Actions
-***************
+---------------
 
 A list of runtime actions are passed as an argument to the :class:`~gamdpy.Simulation` class.
 
@@ -174,7 +177,7 @@ A list of runtime actions are passed as an argument to the :class:`~gamdpy.Simul
 .. autoclass:: gamdpy.StressSaver
 
 Calculators
-***********
+-----------
 
 .. autoclass:: gamdpy.CalculatorRadialDistribution
    :members:
@@ -192,19 +195,19 @@ Calculators
    :members:
 
 Tools and helper functions
-**************************
+--------------------------
 
 Input and Output
-================
+~~~~~~~~~~~~~~~~
 
 The TrajectoryIO class
-----------------------
+^^^^^^^^^^^^^^^^^^^^^^
 
 .. autoclass:: gamdpy.tools.TrajectoryIO
    :members:
 
 IO functions
-------------
+^^^^^^^^^^^^
 
 .. autofunction:: gamdpy.tools.save_configuration
 
@@ -217,18 +220,20 @@ IO functions
 .. autofunction:: gamdpy.configuration_to_lammps
 
 Post-analysis tools
-===================
+-------------------
+
+.. autofunction:: gamdpy.extract_scalars
 
 .. autofunction:: gamdpy.tools.calc_dynamics
 
-.. autofunction:: gamdpy.tools.calculateMolCenterMass
+.. autofunction:: gamdpy.tools.calculate_molecular_center_of_masses
 
-.. autofunction:: gamdpy.tools.calculateMolVelocity
+.. autofunction:: gamdpy.tools.calculate_molecular_velocities
 
-.. autofunction:: gamdpy.tools.calculateMolDipole
+.. autofunction:: gamdpy.tools.calculate_molecular_dipoles
 
 Mathematical functions
-======================
+----------------------
 
 The below returns functions that can be executed fast in a GPU kernel.
 As an example, they can be used to set a time-dependent target temperature.
@@ -239,13 +244,8 @@ As an example, they can be used to set a time-dependent target temperature.
 
 .. autofunction:: gamdpy.make_function_sin
 
-Extract data
-============
-
-.. autofunction:: gamdpy.extract_scalars
-
 Miscellaneous
-*************
+-------------
 
 .. autofunction:: gamdpy.select_gpu
 

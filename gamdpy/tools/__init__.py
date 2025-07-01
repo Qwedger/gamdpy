@@ -3,4 +3,4 @@ from .save_configuration import save_configuration
 from .calc_dynamics import calc_dynamics
 from .print_h5 import print_h5_structure
 from .print_h5 import print_h5_attributes
-from .calc_molecules import calculateMolCenterMass, calculateMolVelocity, calculateMolDipole
+from .calc_molecules import calculate_molecular_center_of_masses, calculate_molecular_velocities, calculate_molecular_dipoles

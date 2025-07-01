@@ -1,4 +1,7 @@
-import numpy as np 
+import numpy
+import numpy as np
+
+import gamdpy
 import gamdpy as gp 
 from numba import jit
 import math
@@ -47,87 +50,109 @@ def __calc_moldipole__(dmols, rmols, atomindices, nuau, ratoms, qatoms, images, 
            
 
 # Wrappers
-def calculateMolCenterMass(conf, molname: str):
-    '''Compute molecular center of mass and molecule mass
+def calculate_molecular_center_of_masses(configuration: gamdpy.Configuration, molecule: str):
+    """ Compute molecular center-of-mass positions and masses.
 
     Parameters
     ----------
-        1: Configuration instance
-        2: Molecule type name 
+    configuration : Configuration
+        Simulation configuration instance containing topology, atomic positions
+        array (`conf['r']`), atomic masses array (`conf['m']`), image flags
+        (`conf.r_im`), and simulation box lengths.
+    molecule : str
+        Name of the molecule type to process.
 
-    Output
-    ------
-        1: Molecular positions 
-        2: Molecular masses
+    Returns
+    -------
+    positions : ndarray, shape (n_molecules, 3)
+        Center-of-mass coordinates of each molecule.
+    masses : ndarray, shape (n_molecules,)
+        Total mass of each molecule.
 
-    Note: The positions are *not* wrapped in accordance with periodic boundary conditions 
+    Notes
+    -----
+    The returned positions are *not* wrapped according to periodic boundary conditions.
+    """
 
-    '''
-
-    atom_idxs = np.array(conf.topology.molecules[molname], dtype=np.uint64)
+    atom_idxs = np.array(configuration.topology.molecules[molecule], dtype=np.uint64)
 
     nmols, nuau = atom_idxs.shape[0], atom_idxs.shape[1]
 
-    rmols = np.zeros( (nmols, 3) )
+    rmols = np.zeros( (nmols, 3) )  # URP: It looks like 3D is hard-coded. Can it be generalize?
     mmols = np.zeros( nmols )
 
-    __calc_molcm__(rmols, mmols, atom_idxs, nuau, conf['r'], conf['m'], conf.r_im, conf.simbox.get_lengths(), nmols) 
+    __calc_molcm__(rmols, mmols, atom_idxs, nuau, configuration['r'], configuration['m'], configuration.r_im, configuration.simbox.get_lengths(), nmols)
 
     return rmols, mmols
 
 
-def calculateMolVelocity(conf, molname: str):
-    '''Compute molecular center of mass velocity 
+def calculate_molecular_velocities(configuration: gamdpy.Configuration, molecule: str):
+    """ Compute molecular center-of-mass velocities.
 
     Parameters
     ----------
-        1: Configuration instance
-        2: Molecule type name 
+    configuration : Configuration
+        Configuration instance containing topology, atomic velocities, and atomic masses.
+    molecule : str
+        Name of the molecule type to process.
 
-    Output
-    ------
-        1: Molecular center of mass velocity
-    '''
+    Returns
+    -------
+    velocities : ndarray, shape (n_molecules, 3)
+        Center-of-mass velocity vectors for each molecule.
 
-    atom_idxs = np.array(conf.topology.molecules[molname], dtype=np.uint64)
+    Notes
+    -----
+    Velocities are computed by combining atomic velocities and masses for each molecule.
+    """
+
+    atom_idxs = np.array(configuration.topology.molecules[molecule], dtype=np.uint64)
 
     nmols, nuau = atom_idxs.shape[0], atom_idxs.shape[1]
 
-    vmols = np.zeros( (nmols, 3) )
-    __calc_molvcm__(vmols, atom_idxs, nuau, conf['v'], conf['m'], nmols)
+    vmols = np.zeros( (nmols, 3) )  # URP. It Looks like 3D is hard-coded. Can it be generalized?
+    __calc_molvcm__(vmols, atom_idxs, nuau, configuration['v'], configuration['m'], nmols)
 
     return vmols
 
 
-def calculateMolDipole(conf, qatoms, molname: str):
-    '''Compute molecular dipoles, molecular center of mass and molecule mass
+def calculate_molecular_dipoles(configuration: gamdpy.Configuration, atom_charges: numpy.ndarray, molecule: str):
+    r""" Compute molecular dipole moments, centers of mass, and masses.
 
     Parameters
     ----------
-        1: Configuration instance
-        2: Atoms charges for this molecule type (array with length of number of atoms)
-        2: Molecule type name 
+    configuration : Configuration
+        A Configuration instance, containing topology, coordinates.
+    atom_charges : array_like of float, shape (n_atoms,)
+        Partial charges for each atom in the specified molecule type.
+    molecule : str
+        Name of the molecule type to process.
 
-    Output
-    ------
-        1: Molecular dipoles
-        2: Molecular positions 
-        3: Molecular masses
+    Returns
+    -------
+    dipoles : ndarray, shape (n_molecules, 3)
+        Dipole moment vectors for each molecule.
+    positions : ndarray, shape (n_molecules, 3)
+        Center-of-mass coordinates of each molecule. These are not wrapped
+        according to periodic boundary conditions.
+    masses : ndarray, shape (n_molecules,)
+        Total mass of each molecule.
 
-    Note: The positions are *not* wrapped in accordance with periodic boundary conditions 
-
-    '''
+    Notes
+    -----
+    The returned positions are *not* wrapped according to periodic boundary conditions.
+    """
     # https://numba.readthedocs.io/en/stable/reference/deprecation.html
     # LC: it seems soon numba would only accept numba.typed.List and not regular python lists
     from numba.typed import List
 
-    atom_idxs = np.array(conf.topology.molecules[molname], dtype=np.uint64)
+    atom_idxs = np.array(configuration.topology.molecules[molecule], dtype=np.uint64)
     nmols, nuau = atom_idxs.shape[0], atom_idxs.shape[1]
 
-    dmols = np.zeros( (nmols, 3) )
-    rmols, mmols = calculateMolCenterMass(conf, molname)
+    dmols = np.zeros( (nmols, 3) )   # URP: It looks like 3D have been hard-coded, can it be generalized?
+    rmols, mmols = calculate_molecular_center_of_masses(configuration, molecule)
 
-    __calc_moldipole__(dmols, rmols, atom_idxs, nuau, conf['r'], List(qatoms), conf.r_im, conf.simbox.get_lengths(), nmols)
+    __calc_moldipole__(dmols, rmols, atom_idxs, nuau, configuration['r'], List(atom_charges), configuration.r_im, configuration.simbox.get_lengths(), nmols)
 
     return dmols, rmols, mmols 
 
