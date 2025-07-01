@@ -32,8 +32,9 @@ def apply_shifted_force_cutoff(pair_potential):
         u, s, umm = pair_pot(dist, params)
         u_cut, s_cut, umm_cut = pair_pot(cut, params)
         u -= u_cut - s_cut * cut * (dist - cut)
+        s -= s_cut * cut/dist
         #u -= u_cut - s_cut*dist*(dist-cut)
-        s -= s_cut
+        #s -= s_cut
         return u, s, umm
 
     return potential
