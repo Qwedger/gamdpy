@@ -29,6 +29,7 @@ extensions = [
     'sphinx.ext.mathjax',
     'sphinx.ext.autodoc',
     'sphinx.ext.napoleon',
+    'sphinx.ext.viewcode',  # Add links to an HTML version of a source code
 ]
 
 nb_execution_mode = "off"

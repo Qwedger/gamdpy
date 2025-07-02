@@ -3,13 +3,12 @@ import numba
 def LJ_12_6(dist, params):  
     """ The 12-6 Lennard-Jones potential
 
-    See :func:`gamdpy.apply_shifted_potential_cutoff` for a usage example.
-
     .. math::
 
         u(r) = A_{12} r^{-12} + A_6 r^{-6}
-        
-        u'(r) = -12*A_{12} r^{-13} - 6*A_6 r^{-7}
+
+    See :func:`gamdpy.apply_shifted_potential_cutoff` for a usage example of a shifted potential cutoff.
+
 
     Parameters
     ----------
@@ -18,17 +17,16 @@ def LJ_12_6(dist, params):
         Distance between particles
 
     params : array-like
-        A₁₂, A₆
+        :math:`A_{12}`, :math:`A_{6}`
 
     Returns
     -------
-
     u : float
-        Potential energy
+        Potential energy, :math:`u(r)`
     s : float
-        Force multiplier, -u'(r)/r
-    umm : float
-        Second derivative of potential energy
+        Force multiplier, :math:`-u'(r)/r`
+    umm: float
+        Second derivative of the potential energy, :math:`u''(r)`
 
     """
     A12 = params[0]  #     Um(r) =    -12*A12*r**-13 -   6*A6*r**-7

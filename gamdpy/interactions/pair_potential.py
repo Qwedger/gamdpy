@@ -7,7 +7,24 @@ import gamdpy as gp
 from .interaction import Interaction
 
 class PairPotential(Interaction):
-    """ Pair potential """
+    """  Pairwise interaction potential for a system of particles.
+
+    Parameters
+    ----------
+    pairpotential_function : callable
+        A JIT compiled function `f(r, params)` that takes a separation distance `r` (float)
+        and a list of parameters, and returns a triplet of floats:
+            - Potential energy, :math:`u(r)`
+            - Force multiplier, :math:`-u'(r)/r`
+            - Second derivative of potential energy, :math:`u''(r)`
+    params : list of floats or nested list of floats
+        Interaction parameters for the pair potential function. Use a nested list for multiple types of particles.
+        The last element of each list is the cutoff distance of the pair potential.
+    max_num_nbs : int
+        Maximum number of neighbors per particle to allocate in the neighbor list.
+    exclusions : array_like
+        List of particle indices to exclude from interactions for each particle.
+    """
 
     def __init__(self, pairpotential_function, params, max_num_nbs, exclusions=None):
         def params_function(i_type, j_type, params):

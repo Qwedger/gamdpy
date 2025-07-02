@@ -86,15 +86,17 @@ Interactions
 ------------
 
 Interactions are passed in a list to the :class:`~gamdpy.Simulation` class.
+This will typically include a *pair potential* and *fix interactions* like gravity and walls.
 
-Pair potentials
-~~~~~~~~~~~~~~~
+Pair potential
+~~~~~~~~~~~~~~
 
 .. autoclass:: gamdpy.PairPotential
    :members:
+   :exclude-members: check_datastructure_validity, get_kernel, get_params
 
-Functions (pair potentials)
-^^^^^^^^^^^^^^^^^^^^^^^^^^^
+Pair potential functions
+^^^^^^^^^^^^^^^^^^^^^^^^
 
 .. autofunction:: gamdpy.LJ_12_6
 
@@ -106,23 +108,18 @@ Functions (pair potentials)
 
 .. autofunction:: gamdpy.SAAP
 
-Functions (bonds)
-^^^^^^^^^^^^^^^^^
-
-.. autofunction:: gamdpy.harmonic_bond_function
-
 Generators
 ^^^^^^^^^^
 
 Generators return a function that can be used to calculate the potential energy and the force between two particles.
 
-.. autofunction:: gamdpy.add_potential_functions
-
-.. autofunction:: gamdpy.make_potential_function_from_sympy
-
 .. autofunction:: gamdpy.make_LJ_m_n
 
 .. autofunction:: gamdpy.make_IPL_n
+
+.. autofunction:: gamdpy.add_potential_functions
+
+.. autofunction:: gamdpy.make_potential_function_from_sympy
 
 Modifies
 ^^^^^^^^
@@ -157,6 +154,14 @@ Generators
 .. autofunction:: gamdpy.setup_planar_interactions
 
 .. autofunction:: gamdpy.make_fixed_interactions
+
+
+Bond functions
+^^^^^^^^^^^^^^^^^
+
+A *bond potential* is needed for the :class:`~gamdpy.Bonds` class.
+
+.. autofunction:: gamdpy.harmonic_bond_function
 
 
 .. _runtime_actions:
