@@ -18,20 +18,11 @@ configuration.randomize_velocities(temperature=0.7)
 
 labels = [['KABLJ_AA', 'KABLJ_AB'],['KABLJ_AB', 'KABLJ_BB']]
 
-pair_pot = gp.TabulatedPairPotential('tab_LJ_LAMMPS.dat', params=labels, max_num_nbs=1000)
-table = np.loadtxt('temp_SF.dat')
+pair_pot = gp.TabulatedPairPotential('tab_LJ.dat', params=labels, max_num_nbs=1000)
+
 
 pfunction_LJ = gp.apply_shifted_force_cutoff(gp.LJ_12_6_sigma_epsilon)
 
-r_values = np.arange(0.6, 2.5, 0.001)
-v_analytic = np.zeros_like(r_values)
-v_table = np.zeros_like(r_values)
-params_analytic = (1.0, 1.0, 2.5)
-for idx in range(len(r_values)):
-    v, s, v2 = pfunction_LJ(r_values[idx], params_analytic)
-    v_analytic[idx] = s
-    v, s, v2 = pair_pot.evaluate_potential_function(r_values[idx], (0,0))
-    v_table[idx] = s
 
 
 # Setup integrator: NVT

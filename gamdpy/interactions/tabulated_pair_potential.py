@@ -116,12 +116,11 @@ class TabulatedPairPotential(Interaction):
         max_cut = np.float32(max(cut_list))
 
         return params, all_coefficients, max_cut
-               
+
     def evaluate_potential_function(self, r, types):
         params, all_coefficients, max_cut = self.extract_params()
         u, s, lap = self.pairpotential_function(r, params[types[0], types[1]], all_coefficients[0][0])
-        #return u
-        return u, s, lap
+        return u
 
 
     def check_datastructure_validity(self) -> bool:
@@ -136,8 +135,16 @@ class TabulatedPairPotential(Interaction):
         self.params, self.all_coefficients, max_cut = self.extract_params()
         self.d_params = cuda.to_device(self.params)
 
-        # Use only the 0,0 entry to start with. NEEDS FIXING!!!!
-        self.d_coefficients_array = cuda.to_device(self.all_coefficients[0][0])
+        # make a two-dimensional tuple
+        all_coefficients_list = []
+        num_types = len(self.all_coefficients)
+        for i in range(num_types):
+            row_list = []
+            for j in range(num_types):
+                row_list.append(self.all_coefficients[i][j])
+            all_coefficients_list.append(tuple(row_list)) # i'th item in main list is a tuple containing the different i,j tables for that particular i
+        self.d_coefficients_array = cuda.to_device( tuple(all_coefficients_list) )
+
 
 
         if compute_plan['nblist'] == 'N squared':
@@ -283,7 +290,7 @@ class TabulatedPairPotential(Interaction):
                     cut = ij_params[-1]
                     if dist_sq < cut*cut:
                         #pairpotential_calculator(math.sqrt(dist_sq), ij_params, my_dr, my_f, my_cscalars, my_stress, vectors[f_id], other_id)
-                        pairpotential_calculator(math.sqrt(dist_sq), ij_params, coefficients_array, my_dr, my_f, my_cscalars, my_stress, vectors[f_id], other_id)
+                        pairpotential_calculator(math.sqrt(dist_sq), ij_params, coefficients_array[my_type][other_type], my_dr, my_f, my_cscalars, my_stress, vectors[f_id], other_id)
                 for k in range(D):
                     cuda.atomic.add(vectors[f_id], (global_id, k), my_f[k])
                     if compute_stresses:
