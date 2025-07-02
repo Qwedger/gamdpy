@@ -62,7 +62,7 @@ print(configuration2)
 
 # Check that we are using the same model
 assert(np.allclose(configuration1['U'], configuration2['U']))
-assert(np.allclose(configuration1['W'], configuration2['W'], atol=0.0001)), f"({configuration1['W']} {configuration2['W']}"
+assert(np.allclose(configuration1['W'], configuration2['W'], atol=0.00001)), f"({configuration1['W']} {configuration2['W']}"
 assert(np.allclose(configuration1['f'], configuration2['f'], atol=0.0001)), f"({configuration1['f']} {configuration2['f']}"
 
 # Setup integrator: NVT
@@ -104,10 +104,10 @@ with h5py.File(quench_filename, "w") as f:
 for saved_timeblock in range(num_timeblocks):
 
     for saved_conf in range(num_configurations):
-        configuration1['r'] = gp.TrajectorySaver.extract_positions(output, saved_timeblock, saved_conf)
-        configuration2['r'] = gp.TrajectorySaver.extract_positions(output, saved_timeblock, saved_conf)
-        configuration1.r_im = gp.TrajectorySaver.extract_images(output, saved_timeblock, saved_conf) 
-        configuration2.r_im = gp.TrajectorySaver.extract_images(output, saved_timeblock, saved_conf)
+        configuration1['r'] = gp.TrajectorySaver.extract_positions(output)[saved_timeblock, saved_conf]
+        configuration2['r'] = gp.TrajectorySaver.extract_positions(output)[saved_timeblock, saved_conf]
+        configuration1.r_im = gp.TrajectorySaver.extract_images(output)[saved_timeblock, saved_conf]
+        configuration2.r_im = gp.TrajectorySaver.extract_images(output)[saved_timeblock, saved_conf]
 
         # Run simulation, i.e., gradient descent
         for timeblock in sim.run_timeblocks():
@@ -153,7 +153,7 @@ axs[1].grid(linestyle='--', alpha=0.5)
 num_types = dynamics['msd'].shape[1]
 for i in range(num_types):
     axs[0].loglog(dynamics['times'], dynamics['msd'][:,i], 'o-', label=f'True MSD, type:{i}')
-    axs[0].loglog(quench_dynamics['times'], quench_dynamics['msd'][:,i], 'o--', label=f'Inherent MSD, Type{i}')
+    axs[0].loglog(quench_dynamics['times'], quench_dynamics['msd'][:,i], 'o--', label=f'Inherent MSD, Type:{i}')
     axs[1].semilogx(dynamics['times'], dynamics['Fs'][:,i], 'o-', label=f'True {i}, q={dynamics["qvalues"][i]}')    
     axs[1].semilogx(quench_dynamics['times'], quench_dynamics['Fs'][:,i], 'o--', label=f'Inherent {i}, q={dynamics["qvalues"][i]}')
 
