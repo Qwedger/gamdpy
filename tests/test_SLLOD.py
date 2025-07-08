@@ -10,6 +10,7 @@ and Lees-Edwards boundary conditions
 def test_SLLOD(run_NVT=False):
     from pathlib import Path
 
+    import h5py
     import numpy as np
     import matplotlib.pyplot as plt
 
@@ -28,7 +29,10 @@ def test_SLLOD(run_NVT=False):
     possible_file_paths = ['reference_data/conf_LJ_N2048_rho0.973_T0.700.h5', 'tests/reference_data/conf_LJ_N2048_rho0.973_T0.700.h5']
     for path in possible_file_paths:
         if Path(path).is_file():
-            configuration = gp.configuration_from_hdf5(path, compute_flags={'stresses':True})
+            with h5py.File(path, "r") as fin:
+                configuration = gp.Configuration.from_h5(fin, "configuration", compute_flags={'stresses':True, 'Vol':True})
+                print("configuration read using gp.Configuration.from_h5", configuration.compute_flags)
+                print(f"volume {configuration.get_volume()}")
             break
     if configuration is None:
         raise FileNotFoundError(f'Could not find configuration file in {possible_file_paths}')
@@ -54,7 +58,7 @@ def test_SLLOD(run_NVT=False):
     # temperature since SLLOD uses an isokinetic thermostat
     configuration.set_kinetic_temperature(temperature, ndofs=configuration.N*3-4) # remove one DOF due to constraint on total KE
 
-    runtime_actions = [gp.MomentumReset(100),
+    runtime_actions = [gp.MomentumReset(100), 
                    gp.TrajectorySaver(include_simbox=True),
                    gp.StressSaver(sc_output),
                    gp.ScalarSaver(sc_output, {'stresses':True}), ]

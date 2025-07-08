@@ -59,7 +59,7 @@ def configuration_to_hdf5(configuration: Configuration, filename: str, meta_data
             ds_r_im[:] = configuration.r_im
 '''
 
-
+'''
 def configuration_from_hdf5(filename: str, reset_images=False, compute_flags=None) -> Configuration:
     """ Read a configuration from a HDF5 file
 
@@ -109,7 +109,7 @@ def configuration_from_hdf5(filename: str, reset_images=False, compute_flags=Non
     else:
         configuration.r_im = r_im
     return configuration
-
+'''
 
 '''
 def configuration_from_hdf5_group(f, group_name, reset_images=False, compute_flags=None) -> Configuration:
