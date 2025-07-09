@@ -5,7 +5,7 @@ import numpy as np
 
 def test_calc_dynamics():
 
-    filename = '../examples/Data/LJ_r0.973_T0.70_toread.h5' # Used in testing
+    filename = 'examples/Data/LJ_r0.973_T0.70_toread.h5' # Used in testing
     # Load existing data
     output = gp.tools.TrajectoryIO(filename).get_h5()
 
@@ -17,7 +17,7 @@ def test_calc_dynamics():
 def test_calc_dynamics_sllod():
 
 
-    filename = 'Data/sllod_data.h5' # Used in testing
+    filename = 'tests/Data/sllod_data.h5' # Used in testing
     # Load existing data
     output = gp.tools.TrajectoryIO(filename).get_h5()
 
