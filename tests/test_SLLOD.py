@@ -6,10 +6,10 @@ and Lees-Edwards boundary conditions
 """
 
 
-
 def test_SLLOD(run_NVT=False):
     from pathlib import Path
 
+    import h5py
     import numpy as np
     import matplotlib.pyplot as plt
 
@@ -28,7 +28,8 @@ def test_SLLOD(run_NVT=False):
     possible_file_paths = ['reference_data/conf_LJ_N2048_rho0.973_T0.700.h5', 'tests/reference_data/conf_LJ_N2048_rho0.973_T0.700.h5']
     for path in possible_file_paths:
         if Path(path).is_file():
-            configuration = gp.configuration_from_hdf5(path, compute_flags={'stresses':True})
+            with h5py.File(path, "r") as fin:
+                configuration = gp.Configuration.from_h5(fin, "configuration", compute_flags={'stresses':True, 'Vol':True})
             break
     if configuration is None:
         raise FileNotFoundError(f'Could not find configuration file in {possible_file_paths}')
@@ -54,7 +55,7 @@ def test_SLLOD(run_NVT=False):
     # temperature since SLLOD uses an isokinetic thermostat
     configuration.set_kinetic_temperature(temperature, ndofs=configuration.N*3-4) # remove one DOF due to constraint on total KE
 
-    runtime_actions = [gp.MomentumReset(100),
+    runtime_actions = [gp.MomentumReset(100), 
                    gp.TrajectorySaver(include_simbox=True),
                    gp.StressSaver(sc_output),
                    gp.ScalarSaver(sc_output, {'stresses':True}), ]
@@ -63,6 +64,9 @@ def test_SLLOD(run_NVT=False):
     sim_SLLOD = gp.Simulation(configuration, pairpot, integrator_SLLOD, runtime_actions,
                             num_timeblocks=3, steps_per_timeblock=128,
                             storage='memory', compute_plan=compute_plan)
+
+    # To generate Data/sllod_data.h5 for use in testing calc_dynamics with LEBC, set storage='Data/sllod_data.h5'
+    # and set num_timeblocks=30
 
     # Run simulation one block at a time
     for block in sim_SLLOD.run_timeblocks():
@@ -76,13 +80,8 @@ def test_SLLOD(run_NVT=False):
     sxy = gp.StressSaver.extract(sim_SLLOD.output)[:,0,1]
     sxy_mean = np.mean(sxy)
     print(f'{sr:.2g} {sxy_mean:.6f}')
-    assert (np.isclose(sxy_mean, 2.71, atol=0.005 )), f"sxy_mean should be 2.71 but is {sxy_mean}"
-    assert (np.isclose(pairpot.nblist.d_nbflag[2], 51, atol=1)), f"pairpot.nblist.d_nbflag[2] should be 49 but is {pairpot.nblist.d_nbflag[2]}"
-
-    #sxy_sc = gp.extract_scalars(sim_SLLOD.output, ['Sxy'])/configuration.get_volume()
-    #sxy_mean_sc = np.mean(sxy)
-    #assert (np.isclose(sxy_mean_sc, 2.71, atol=0.005 ))
-
+    assert np.isclose(sxy_mean, 2.71, atol=0.005 ), f"sxy_mean should be 2.71 but is {sxy_mean}"
+    assert np.isclose(pairpot.nblist.d_nbflag[2], 51, atol=1), f"pairpot.nblist.d_nbflag[2] should be 51 but is {pairpot.nblist.d_nbflag[2]}"
 
 
 if __name__ == '__main__':

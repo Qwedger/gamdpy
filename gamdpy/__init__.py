@@ -12,7 +12,6 @@ config.CUDA_ENABLE_PYNVJITLINK = 1
 # The (abstract base) class SimulationBox, and derived classes Orthrhombic and LeesEdwards have information about the simulation box
 from .configuration.Configuration import Configuration
 from .configuration.old_input_output import configuration_to_rumd3, configuration_from_rumd3, configuration_to_lammps
-from .configuration.old_input_output import configuration_from_hdf5 # This should be removed
 from .configuration.Configuration import replicate_molecules
 from .simulation_boxes.orthorhombic import Orthorhombic
 from .simulation_boxes.lees_edwards import LeesEdwards
@@ -40,7 +39,7 @@ from .interactions import Gravity, Relaxtemp, Tether
 from .interactions.potential_functions import *
 
 # Import from runtime_actions subpackage (Actions that can be inserted into the stimulation  kernel)
-from .runtime_actions import RuntimeAction, add_runtime_actions_list, TrajectorySaver, RestartSaver, ScalarSaver, MomentumReset, StressSaver, extract_stress_tensor
+from .runtime_actions import RuntimeAction, add_runtime_actions_list, TrajectorySaver, RestartSaver, ScalarSaver, MomentumReset, StressSaver
 from .runtime_actions.time_scheduler import *
 
 # Import from calculators subpackage

@@ -54,6 +54,9 @@ class Test_examples:
     def test_minimal_NPT(self):
         self.make_one("minimal_NPT")
 
+    def test_minimal_NVU(self):
+        self.make_one("minimal_NVU")
+
     def test_yukawa(self):
         self.make_one("yukawa")
 
@@ -162,11 +165,11 @@ class Test_examples:
     def test_molecules_polydisperse(self):
         self.make_one("molecules_polydisperse", ["Data/chains_poly.h5", "Data/dump.lammps", "Data/dump_compress.lammps", "chain10.pdf", "chain5.pdf"])
 
-    def test_quench_restarts(self): 
-        self.make_one("quench_restarts")
-
     def test_NVU_example(self):
         self.make_one("NVU_example")
+
+    def test_quench_restarts(self):
+        self.make_one("quench_restarts")
 
     def test_quench_trajectory(self): 
         self.make_one("quench_trajectory", ['Data/KABLJ_Rho1.200_T0.400_toread_quench.h5', ])

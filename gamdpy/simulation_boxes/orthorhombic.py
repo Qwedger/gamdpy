@@ -74,7 +74,7 @@ class Orthorhombic(SimulationBox):
 
     def get_dist_sq_function(self) -> callable:
         D = self.D
-        # Generates.function dist_sq_function which computes distance squared for one neighbor
+        # Generates function dist_sq_function which computes distance squared for one neighbor
         def dist_sq_function(ri, rj, sim_box):
             ''' Returns the squared distance between ri and rj applying MIC'''
             dist_sq = numba.float32(0.0)
@@ -175,6 +175,6 @@ class Orthorhombic(SimulationBox):
 
     def get_loop_x_shift_function(self):
 
-       def loop_x_shift_function(sim_box, cell_length_x):
+       def loop_x_shift_function(sim_box, cell_length_x): # pragma: no cover
             return 0
        return loop_x_shift_function

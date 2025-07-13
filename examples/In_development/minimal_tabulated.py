@@ -21,9 +21,6 @@ labels = [['KABLJ_AA', 'KABLJ_AB'],['KABLJ_AB', 'KABLJ_BB']]
 pair_pot = gp.TabulatedPairPotential('tab_LJ.dat', params=labels, max_num_nbs=1000)
 
 
-pfunction_LJ = gp.apply_shifted_force_cutoff(gp.LJ_12_6_sigma_epsilon)
-
-
 
 # Setup integrator: NVT
 integrator = gp.integrators.NVT(temperature=0.7, tau=0.2, dt=0.005)
