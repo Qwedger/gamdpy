@@ -59,7 +59,7 @@ from .tools.Evaluator import Evaluator
 # Misc folder contains scripts that have no better place in the code
 from .misc.select_gpu import select_gpu
 from .misc.plot_scalars import plot_scalars
-from .misc.make_function import make_function_constant, make_function_ramp, make_function_sin
+from .misc.make_function import make_function_constant, make_function_ramp, make_function_sin, make_function_cos
 from .misc.extract_scalars import extract_scalars
 from .misc.plot_molecule import plot_molecule
 
