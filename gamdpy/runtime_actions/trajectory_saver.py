@@ -69,7 +69,7 @@ class TrajectorySaver(RuntimeAction):
                 dtype=np.int32,  compression=self.compression, compression_opts=self.compression_opts)
         output['trajectory_saver'].attrs['compression_info'] = f"{self.compression} with opts {self.compression_opts}"
         output['trajectory_saver'].attrs['scheduler'] = self.scheduler.__class__.__name__
-        output['trajectory_saver'].attrs['scheduler_info'] = self.scheduler.kwargs
+        output['trajectory_saver'].attrs['scheduler_info'] = json.dumps(self.scheduler.kwargs)
         output['trajectory_saver'].attrs['num_timeblocks'] = self.num_timeblocks
         output['trajectory_saver'].attrs['steps_per_timeblock'] = self.steps_per_timeblock
         # output['trajectory_saver'].create_dataset('steps', data=self.scheduler.steps)
