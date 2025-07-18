@@ -20,9 +20,6 @@ class TrajectorySaver(RuntimeAction):
         Boolean deciding if to include simbox informations in output
         Default False
 
-    verbose : bool, optional
-        Default False
-
     compression : str, optional
         String selecting the type of compression used.
         Default "gzip"
@@ -30,10 +27,14 @@ class TrajectorySaver(RuntimeAction):
     compression_opts : int, optional
         Relevant if "gzip" compression is used. Select compression option for gzip
 
-    saving_list :  dict, optional
-        This dictionary is used to save additional informations in the trajectory. Default ['positions', 'images']
-        Can be used to save velocities by setting saving_list = ['velocities'].
+    saving_list :  list, optional
+        This list is used to select which information to save in the trajectory. 
+        Default ['positions', 'images'].
+        Can be used to save only velocities by setting saving_list = ['velocities'].
         Possible list entries are 'positions', 'images', 'velocities', 'forces'.
+
+    verbose : bool, optional
+        Default False
 
     Raises
     ------
@@ -41,10 +42,10 @@ class TrajectorySaver(RuntimeAction):
         If saving_list contains a name which is not recongnized.
     """
 
-    def __init__(self, scheduler=Log2(), 
-            include_simbox=False, verbose=False, 
-            compression="gzip", compression_opts=4, 
-            saving_list=['positions', 'images']) -> None:
+    def __init__(self, scheduler=Log2(), include_simbox=False,
+            compression="gzip", compression_opts=4,
+            saving_list=['positions', 'images'],
+            verbose=False) -> None:
         
         self.scheduler = scheduler
         self.include_simbox = include_simbox
@@ -112,13 +113,11 @@ class TrajectorySaver(RuntimeAction):
         #        shape=(self.num_timeblocks, self.conf_per_block, self.configuration.N, self.configuration.D),
         #        chunks=(1, 1, self.configuration.N, self.configuration.D),
         #        dtype=np.int32,  compression=self.compression, compression_opts=self.compression_opts)
-        for key in self.saving_list:#, value in self.saving_flags.items():
-            #if value:
-                output.create_dataset(f'trajectory_saver/{key}',
-                        shape=(self.num_timeblocks, self.conf_per_block, self.configuration.N, self.configuration.D),
-                        chunks=(1, 1, self.configuration.N, self.configuration.D),
-                        dtype=self.datatypes[f'{key}'], compression=self.compression, compression_opts=self.compression_opts)
-
+        for key in self.saving_list:
+            output.create_dataset(f'trajectory_saver/{key}',
+                    shape=(self.num_timeblocks, self.conf_per_block, self.configuration.N, self.configuration.D),
+                    chunks=(1, 1, self.configuration.N, self.configuration.D),
+                    dtype=self.datatypes[f'{key}'], compression=self.compression, compression_opts=self.compression_opts)
 
         output['trajectory_saver'].attrs['compression_info'] = f"{self.compression} with opts {self.compression_opts}"
         output['trajectory_saver'].attrs['scheduler'] = self.scheduler.__class__.__name__
@@ -174,10 +173,8 @@ class TrajectorySaver(RuntimeAction):
         data = self.d_conf_array.copy_to_host()
         # note that d_conf_array has dimensions (self.conf_per_block, 2, self.configuration.N, self.configuration.D)
         #output_reference['trajectory_saver/positions'][timeblock], output_reference['trajectory_saver/images'][timeblock] = data[:, 0], data[:, 1]
-        #keys = list(self.saving_flags.keys())
-        for key in self.saving_list:#, value in self.saving_flags.items():
-            #if value:
-                output_reference[f'trajectory_saver/{key}'][timeblock] = data[:,self.saving_list.index(key)]
+        for key in self.saving_list:
+            output_reference[f'trajectory_saver/{key}'][timeblock] = data[:,self.saving_list.index(key)]
         #output['trajectory_saver'][block, :] = self.d_conf_array.copy_to_host()
         if self.include_simbox:
             output_reference['trajectory_saver/sim_box'][timeblock, :] = self.d_sim_box_output_array.copy_to_host()
@@ -225,10 +222,10 @@ class TrajectorySaver(RuntimeAction):
                 global_id, my_t = cuda.grid(2)
                 if global_id < num_part and my_t == 0:
                     for k in range(D):
-                        if save_r: conf_array[save_index, pos_r, global_id, k] = vectors[r_id][global_id, k]
+                        if save_r:   conf_array[save_index, pos_r, global_id, k]   = vectors[r_id][global_id, k]
                         if save_img: conf_array[save_index, pos_img, global_id, k] = np.float32(r_im[global_id, k])
-                        if save_v: conf_array[save_index, pos_v, global_id, k] = vectors[v_id][global_id, k]
-                        if save_f: conf_array[save_index, pos_f, global_id, k] = vectors[f_id][global_id, k]
+                        if save_v:   conf_array[save_index, pos_v, global_id, k]   = vectors[v_id][global_id, k]
+                        if save_f:   conf_array[save_index, pos_f, global_id, k]   = vectors[f_id][global_id, k]
                     if include_simbox and global_id == 0:
                         for k in range(sim_box_array_length):
                             sim_box_output_array[save_index, k] = sim_box[k]
