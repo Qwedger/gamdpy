@@ -8,6 +8,8 @@ import matplotlib.pyplot as plt
 
 import gamdpy as gp
 
+filename = 'Data/rubber_cube.h5'
+
 # A rotated cube of particles
 lattice_length = 8 # Number of particles in each direction
 cm = np.array([0.0, 0.0, 0.0])  # Initial position of center of mass
@@ -101,21 +103,19 @@ gravity = gp.interactions.Planar(
 
 # Setup simulation
 integrator = gp.integrators.NVE(dt=0.01)
-runtime_actions = [gp.TrajectorySaver(),
+runtime_actions = [gp.RestartSaver(), 
+                   gp.TrajectorySaver(),
                    gp.ScalarSaver(steps_between_output=1)]
 interactions = [bonds, walls, gravity]
 sim = gp.Simulation(configuration, interactions, integrator, runtime_actions,
                     num_timeblocks=64, steps_per_timeblock=1024,
-                    storage='memory')
+                    storage=filename)
 
-# Run simulation and save as lammps trajectory
-dump_filename = 'Data/rubber_cube.lammps'
-with open(dump_filename, 'w') as f:
-    print(gp.configuration_to_lammps(sim.configuration, timestep=0), file=f)
-
+# Run simulation
 for block in sim.run_timeblocks():
     print(sim.status(per_particle=True))
-    with open(dump_filename, 'a') as f:
-        print(gp.configuration_to_lammps(sim.configuration, timestep=sim.steps_per_block*(block+1)), file=f)
-
+    
 print(sim.summary())
+
+print('To visualize in ovito (if installed):')
+print(f'python3 visualize.py {filename}')
