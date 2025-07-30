@@ -157,7 +157,7 @@ class Test_examples:
         self.make_one("kablj", ["Data/KABLJ_Rho1.200_T0.800.h5"])
 
     def test_molecules(self):
-        self.make_one("molecules", ["Data/molecules.h5", "Data/dump.lammps", "Data/dump_compress.lammps", "molecule.pdf"])
+        self.make_one("molecules", ["Data/chains_compress.h5", "Data/chains.h5", "molecule.pdf"])
 
     def test_rubber_cube(self):
         self.make_one("rubber_cube", ['Data/rubber_cube.h5'])
