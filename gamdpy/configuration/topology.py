@@ -33,6 +33,18 @@ class Topology():
         for key in self.molecules.keys():
             h5group['molecules'].create_dataset(key, data=self.molecules[key], dtype=np.int32)
         return 
+   
+    def from_h5(self, h5group):
+        self.bonds = h5group['bonds']
+        #h5group.create_dataset('bonds', data=self.bonds, dtype=np.int32 )
+        #h5group.create_dataset('angles', data=self.angles, dtype=np.int32 )
+        #h5group.create_dataset('dihedrals', data=self.dihedrals, dtype=np.int32 )
+
+        #h5group.create_group('molecules')
+        #h5group['molecules'].attrs['names'] = list(self.molecules.keys()) # list of names of molecule types
+        #for key in self.molecules.keys():
+        #    h5group['molecules'].create_dataset(key, data=self.molecules[key], dtype=np.int32)
+        return 
 
 def bonds_from_positions(positions, cut_off, bond_type):
     bonds = []

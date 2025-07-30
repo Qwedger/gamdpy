@@ -25,22 +25,25 @@ else:
     filename = 'Data/KABLJ_Rho1.200_T0.400_toread.h5' # Used in testing
 
 # make a filename from UUID based on the host ID and current time
-temp_file = '/tmp/' + str(uuid.uuid1()) + '.lammps'
-print(f'{temp_file}')
+data_file = '/tmp/' + str(uuid.uuid1()) + '.lammps'
+dump_file = '/tmp/' + str(uuid.uuid1()) + '.dump'
 
-# Load existing data
+# Load existing data and save 
 output = gp.tools.TrajectoryIO(filename).get_h5()
-configuration = gp.Configuration.from_h5(output, 'restarts/restart0000')
 
-print('Unpacking files ', end='', flush=True)
-with open(temp_file, 'w') as f:
+configuration = gp.Configuration.from_h5(output, 'initial_configuration', include_topology=True)
+with open(data_file, 'w') as f:
+    print(gp.configuration_to_lammps_data(configuration), file=f)
+
+configuration = gp.Configuration.from_h5(output, 'restarts/restart0000')
+with open(dump_file, 'w') as f:
     print(gp.configuration_to_lammps(configuration, timestep=0), file=f)
 num_restarts = len(output['restarts'])
 
 print(f'Unpacking {num_restarts} restarts: ', end='', flush=True)
 for i in range(1, num_restarts):
     configuration = gp.Configuration.from_h5(output, f'restarts/restart{i:04d}')
-    with open(temp_file, 'a') as f:
+    with open(dump_file, 'a') as f:
         print(gp.configuration_to_lammps(configuration, timestep=i), file=f)
     if i%10==0:
         print(i, end='', flush=True)
@@ -49,6 +52,6 @@ for i in range(1, num_restarts):
 print()
 
 if executable:
-    os.system(executable + ' ' + temp_file)
-    os.system('rm ' + temp_file)
+    os.system(executable + ' ' + data_file + ' ' + dump_file )
+    os.system('rm ' + data_file + ' ' + dump_file )
 

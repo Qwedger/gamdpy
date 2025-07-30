@@ -11,7 +11,8 @@ config.CUDA_ENABLE_PYNVJITLINK = 1
 # The configuration subpackage contains details about the configuration (positions, energies, etc)
 # The (abstract base) class SimulationBox, and derived classes Orthrhombic and LeesEdwards have information about the simulation box
 from .configuration.Configuration import Configuration
-from .configuration.old_input_output import configuration_to_rumd3, configuration_from_rumd3, configuration_to_lammps
+from .configuration.old_input_output import configuration_to_rumd3, configuration_from_rumd3
+from .configuration.old_input_output import configuration_to_lammps, configuration_to_lammps_data
 from .configuration.Configuration import replicate_molecules
 from .simulation_boxes.orthorhombic import Orthorhombic
 from .simulation_boxes.lees_edwards import LeesEdwards

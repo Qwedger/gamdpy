@@ -119,29 +119,23 @@ eps = [[1.00, 0.95],
        [0.95, 0.90]]
 cut = np.array(sig)*2.5
 
-
-
 pair_pot = gp.PairPotential(pair_func, params=[sig, eps, cut], exclusions=exclusions, max_num_nbs=1000)
 
 # Make integrator
 integrator = gp.integrators.NVT(temperature=temperature, tau=0.1, dt=0.004)
 
 # Setup runtime actions, i.e. actions performed during simulation of timeblocks
-runtime_actions = [gp.TrajectorySaver(),
+runtime_actions = [gp.RestartSaver(),
+                   gp.TrajectorySaver(),
                    gp.ScalarSaver(),
                    gp.MomentumReset(100)]
 
 # Setup simulation
 sim = gp.Simulation(configuration, [pair_pot, bonds, angles, dihedrals], integrator, runtime_actions,
                     num_timeblocks=num_timeblocks_equilibration, steps_per_timeblock=steps_per_timeblock,
-                    storage='memory')
+                    storage=filename+'_compress.h5')
 
 print('\nCompression and equilibration: ')
-dump_filename = 'Data/dump_compress.lammps'
-with open(dump_filename, 'w') as f:
-    print(gp.configuration_to_lammps(sim.configuration, timestep=0), file=f)
-
-
 initial_rho = configuration.N / configuration.get_volume()
 for block in sim.run_timeblocks():
     volume = configuration.get_volume()
@@ -149,9 +143,7 @@ for block in sim.run_timeblocks():
     current_rho = N/volume
     print(sim.status(per_particle=True), f'rho= {current_rho:.3}', end='\t')
     print(f'P= {(N*temperature + np.sum(configuration["W"]))/volume:.3}') # pV = NkT + W
-    with open(dump_filename, 'a') as f:
-        print(gp.configuration_to_lammps(sim.configuration, timestep=sim.steps_per_block*(block+1)), file=f)
-
+    
     # Scale configuration to get closer to final density, rho
     if block<sim.num_blocks/2:
         desired_rho = (block+1)/(sim.num_blocks/2)*(rho - initial_rho) + initial_rho
@@ -167,16 +159,12 @@ sim = gp.Simulation(configuration, [pair_pot, bonds, angles, dihedrals], integra
                     compute_plan=sim.compute_plan, storage=filename+'.h5')
 
 print('\nProduction: ')
-dump_filename = 'Data/dump.lammps'
-with open(dump_filename, 'w') as f:
-    print(gp.configuration_to_lammps(sim.configuration, timestep=0), file=f)
-
-
 for block in sim.run_timeblocks():
     print(sim.status(per_particle=True))
-    with open(dump_filename, 'a') as f:
-        print(gp.configuration_to_lammps(sim.configuration, timestep=sim.steps_per_block*(block+1)), file=f)
 
 print(sim.summary()) 
 print(configuration)
+
+print('\nTo visualize in ovito (if installed):')
+print(f'python3 visualize.py {filename}.h5')
 

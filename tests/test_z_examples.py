@@ -163,7 +163,7 @@ class Test_examples:
         self.make_one("rubber_cube", ['Data/rubber_cube.h5'])
 
     def test_molecules_polydisperse(self):
-        self.make_one("molecules_polydisperse", ["Data/chains_poly.h5", "Data/dump.lammps", "Data/dump_compress.lammps", "chain10.pdf", "chain5.pdf"])
+        self.make_one("molecules_polydisperse", ["Data/chains_poly_compress.h5", "Data/chains_poly.h5", "chain10.pdf", "chain5.pdf"])
 
     def test_NVU_example(self):
         self.make_one("NVU_example")
