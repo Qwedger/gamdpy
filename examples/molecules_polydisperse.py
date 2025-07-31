@@ -41,7 +41,7 @@ print("num_mols_each_type")
 print(num_mols_each_type)
 
 filename = 'Data/chains_poly'
-num_timeblocks_equilibration = 64
+num_timeblocks_equilibration = 32
 num_timeblocks_production = 16
 steps_per_timeblock = 1 * 1024
 
@@ -147,8 +147,8 @@ for block in sim.run_timeblocks():
     # Scale configuration to get closer to final density, rho
     if block<sim.num_blocks/2:
         desired_rho = (block+1)/(sim.num_blocks/2)*(rho - initial_rho) + initial_rho
-        if desired_rho > 1.2*current_rho:
-            desired_rho = 1.2*current_rho 
+        if desired_rho > 1.5*current_rho:
+            desired_rho = 1.5*current_rho 
         configuration.atomic_scale(density=desired_rho)
         configuration.copy_to_device() # Since we altered configuration, we need to copy it back to device
 print(sim.summary()) 

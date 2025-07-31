@@ -48,7 +48,7 @@ integrator = gp.integrators.NVT(temperature=Ttarget_function, tau=0.2, dt=dt)
 # Setup runtime actions, i.e. actions performed during simulation of timeblocks
 runtime_actions = [gp.MomentumReset(100),]
 
-sim = gp.Simulation(configuration, pair_pot, integrator, runtime_actions, 
+sim = gp.Simulation(configuration, [pair_pot, ], integrator, runtime_actions, 
                     num_timeblocks=num_timeblocks, steps_per_timeblock=steps_per_timeblock,
                     storage="memory") 
 
@@ -63,45 +63,19 @@ print('\nProduction:')
 integrator = gp.integrators.NVT(temperature=temperature, tau=0.2, dt=dt)
 
 #Setup runtime actions, i.e. actions performed during simulation of timeblocks
-runtime_actions = [gp.TrajectorySaver(),
+runtime_actions = [gp.RestartSaver(),
+                   gp.TrajectorySaver(),
                    gp.ScalarSaver(32, {'Fsq':True, 'lapU':True}),
                    gp.RestartSaver(),
                    gp.MomentumReset(100)]
 
-sim = gp.Simulation(configuration, pair_pot, integrator, runtime_actions,
+sim = gp.Simulation(configuration, [pair_pot, ], integrator, runtime_actions,
                     num_timeblocks=num_timeblocks, steps_per_timeblock=steps_per_timeblock,
                     storage=filename)
+
 for block in sim.run_timeblocks():
     print(f'{sim.status(per_particle=True)}')
 print(sim.summary())
 
 # Print current status of configuration
 print(configuration)
-
-columns = ['U', 'W', 'K', 'Fsq', 'lapU', 'Vol']
-data = np.array(gp.extract_scalars(sim.output, columns, first_block=0))
-df = pd.DataFrame(data.T, columns=columns)
-df = pd.DataFrame(data.T, columns=columns)
-df['t'] = np.arange(len(df['U'])) * dt * sim.output['scalar_saver'].attrs["steps_between_output"]
-
-mu = np.mean(df['U'])/configuration.N
-mw = np.mean(df['W'])/configuration.N
-cvex = np.var(df['U'])/temperature**2/configuration.N
-
-print('\ngamdpy:')
-print(f'Potential energy:     {mu:.4f}')
-print(f'Excess heat capacity: {cvex:.3f}')
-print(f'Virial                {mw:.4f}')
-
-if __name__ == "__main__":
-    gp.plot_scalars(df, configuration.N,  configuration.D, figsize=(10,8), block=False)
-
-dyn = gp.tools.calc_dynamics(sim.output, first_block=0, qvalues=[7.5, 5.5])
-fig, axs = plt.subplots(1, 1, figsize=(6,4))
-axs.loglog(dyn['times'], dyn['msd'], '.-', label=['A', 'B'])
-axs.set_xlabel('Time')
-axs.set_ylabel('MSD')
-
-axs.legend()
-if __name__ == "__main__":
-    plt.show(block=True)

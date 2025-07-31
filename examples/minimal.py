@@ -39,6 +39,10 @@ print(sim.summary())
 # Print current status of configuration
 print(configuration)
 
-# Do analysis from the commandline (like computing MSD) with something like,
-#    python -m gamdpy.tools.calc_dynamics -f 4 -o msd.pdf LJ_T*.h5
-# or with a Python script. See examples.
+print('\nAnalyse the saved simulation with scripts found in "examples")')
+print('(visualize requires that ovito is installed)):')
+print('   python3 analyze_structure.py LJ_T0.70')
+print('   python3 analyze_dynamics.py LJ_T0.70')
+print('   python3 analyze_thermodynamics.py LJ_T0.70')
+print('   python3 visualize.py LJ_T0.70.h5')
+

@@ -46,6 +46,9 @@ dict_this_mol = {"positions" : positions,
                  "masses" : masses,
                  "topology" : top}
 
+print(dict_this_mol)
+print(dict_this_mol['topology'])
+
 print('Initial Positions:')
 for position in positions:
     print('\t\t', position)
@@ -119,12 +122,15 @@ initial_rho = configuration.N / configuration.get_volume()
 for block in sim.run_timeblocks():
     volume = configuration.get_volume()
     N = configuration.N
-    print(sim.status(per_particle=True), f'rho= {N/volume:.3}', end='\t')
+    current_rho = N/volume
+    print(sim.status(per_particle=True), f'rho= {current_rho:.3}', end='\t')
     print(f'P= {(N*temperature + np.sum(configuration["W"]))/volume:.3}') # pV = NkT + W
-        
+    
     # Scale configuration to get closer to final density, rho
     if block<sim.num_blocks/2:
         desired_rho = (block+1)/(sim.num_blocks/2)*(rho - initial_rho) + initial_rho
+        if desired_rho > 1.5*current_rho:
+            desired_rho = 1.5*current_rho 
         configuration.atomic_scale(density=desired_rho)
         configuration.copy_to_device() # Since we altered configuration, we need to copy it back to device
 print(sim.summary()) 
@@ -147,11 +153,10 @@ mean_diagonal_sts = (full_stress_tensor[:,0,0] + full_stress_tensor[:,1,1] + ful
 print("Mean diagonal stress", np.mean(mean_diagonal_sts) )
 print("Pressure", np.mean(W)*rho/N + temperature*rho)
 
-print('\nAnalyse structure with:')
-print('   python3 analyze_structure.py Data/molecules')
 
-print('\nAnalyze dynamics with:')
-print('   python3 analyze_dynamics.py Data/molecules')
-
-print('\nVisualize simulation in ovito with:')
-print(f'python3 visualize.py {filename}.h5')
+print('\nAnalyse the saved simulation with scripts found in "examples"')
+print('(visualize requires that ovito is installed):')
+print('   python3 analyze_structure.py Data/chains')
+print('   python3 analyze_dynamics.py Data/chains')
+print('   python3 analyze_thermodynamics.py Data/chains')
+print('   python3 visualize.py Data/chains.h5')
