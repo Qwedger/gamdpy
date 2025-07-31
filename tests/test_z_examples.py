@@ -81,6 +81,9 @@ class Test_examples:
     def test_ASD(self):
         self.make_one("ASD", ["Data/ASD_rho1.863_T0.465.h5"])
 
+    def test_read_scalar_data_from_h5(self):
+        self.make_one("read_scalar_data_from_h5")
+
     #def test_NVU_RT_kob_andersen(self):
     #    self.make_one("NVU_RT_kob_andersen")
 

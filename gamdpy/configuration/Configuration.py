@@ -540,7 +540,7 @@ class Configuration:
         Parameters
         ----------
         h5file : HDF5 File
-            open HDF5 open, as returned by h5py.File()
+            open HDF5 file object, as returned by h5py.File()
 
         group_name : str
             string corresponding to a key in the h5py.File containing a saved gamdpy configuration

@@ -1,7 +1,7 @@
 """ Give information about the content of a .h5 file created by gamdpy
     Usage:
 
-    info_h5 filename.h5
+    python3 info_h5 filename.h5
 """
 
 import gamdpy as gp

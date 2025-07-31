@@ -7,7 +7,7 @@ import h5py
 from .runtime_action import RuntimeAction
 
 class ScalarSaver(RuntimeAction):
-    """ 
+    """
     Runtime action for saving scalar data (such as thermodynamic properties) during a timeblock
     every `steps_between_output` time steps.
     """
@@ -98,14 +98,14 @@ class ScalarSaver(RuntimeAction):
 
         zero_kernel = cuda.jit(zero_kernel)
         return zero_kernel[1,1]
-     
+
     def get_params(self, configuration, compute_plan):
-        
+
         self.output_array = np.zeros((self.scalar_saves_per_block, self.num_scalars), dtype=np.float32)
         self.d_output_array = cuda.to_device(self.output_array)
         self.params = (self.steps_between_output, self.d_output_array)
         return self.params
-    
+
     def initialize_before_timeblock(self, timeblock: int, output_reference):
         self.zero_kernel(self.d_output_array)
 
@@ -127,9 +127,9 @@ class ScalarSaver(RuntimeAction):
     def get_poststep_kernel(self, configuration, compute_plan):
         # Unpack parameters from configuration and compute_plan
         D, num_part = configuration.D, configuration.N
-        pb, tp, gridsync = [compute_plan[key] for key in ['pb', 'tp', 'gridsync']] 
+        pb, tp, gridsync = [compute_plan[key] for key in ['pb', 'tp', 'gridsync']]
         num_blocks = (num_part - 1) // pb + 1
-        
+
         # Below is three alternatives of how to unpack parameters for use in the kernel
 
 #        Alternative 1. Requires renaming of some variables
@@ -144,7 +144,7 @@ class ScalarSaver(RuntimeAction):
 #        print(compute_U)
 
 
-        # Alternative 2. 'None' used as index for scalars that are not there, and therefore shouldn't be used (kernel throws an getitem error)  
+        # Alternative 2. 'None' used as index for scalars that are not there, and therefore shouldn't be used (kernel throws an getitem error)
         unpacked_compute_flags = [configuration.compute_flags[key] for key in ['U', 'W', 'lapU', 'Fsq', 'K', 'Vol', 'Ptot', 'stresses']]
         compute_u, compute_w, compute_lap, compute_fsq, compute_k, compute_vol, compute_Ptot, compute_stresses = unpacked_compute_flags
 
@@ -160,8 +160,8 @@ class ScalarSaver(RuntimeAction):
         #compute_vol = configuration.compute_flags['Vol']
         #compute_Ptot = configuration.compute_flags['Ptot']
         #compute_stresses = configuration.compute_flags['stresses']
-        
-    
+
+
         # Unpack indices for scalars to be compiled into kernel
         #if compute_u:
         #    u_id = self.sid['U']
@@ -198,12 +198,12 @@ class ScalarSaver(RuntimeAction):
         volume_function = numba.njit(configuration.simbox.get_volume_function())
 
         def kernel(grid, vectors, scalars, r_im, sim_box, step, runtime_action_params):
-            """     
+            """
             """
             steps_between_output, output_array = runtime_action_params # Needs to be compatible with get_params above
             if step%steps_between_output==0:
                 save_index = step//steps_between_output
-            
+
                 global_id, my_t = cuda.grid(2)
                 if global_id < num_part and my_t == 0:
                     if compute_u:
@@ -234,33 +234,93 @@ class ScalarSaver(RuntimeAction):
                     output_array[save_index][vol_id] = volume_function(sim_box)
 
             return
-        
+
         kernel = cuda.jit(device=gridsync)(kernel)
 
         if gridsync:
             return kernel  # return device function
         else:
             return kernel[num_blocks, (pb, 1)]  # return kernel, incl. launch parameters
-        
+
     # Class functions to read data
 
-    def info(h5file):
+    def info(h5file: h5py.File) -> str:
+        """ Get information about what data was saved by ScalarSaver in a .h5 file
+
+        Parameters
+        ----------
+        h5file h5py.File: 
+            HDF5 file object from which data is read
+
+        Returns
+        -------
+        str : A string containing information about the available scalars, and the associated shape.
+
+        """
+
         h5grp = h5file['scalar_saver']
         str = f"\tscalar_names: {h5grp.attrs['scalar_names']}"
         str += f"\n\tscalars, shape: {h5grp['scalars'].shape}, dtype: {h5grp['scalars'].dtype}"
         return str
 
-    def columns(h5file):
+    def columns(h5file: h5py.File) -> list[str]:
+        """ Get a list of available data columns saved by ScalarSaver in a .h5 file
+        
+        Parameters
+        ----------
+        h5file h5py.File: 
+            HDF5 file object from which data is read
+
+        Returns
+        -------
+        list(str) : A list of available data column keys 
+        
+        """
+
         return list(h5file['scalar_saver'].attrs['scalar_names'])
 
-    def extract(h5file, columns, per_particle=True, first_block=0, last_block=None, subsample=1, function=None):
+    def extract(h5file: h5py.File, columns: list[str], per_particle: bool=True, 
+                first_block: int=0, last_block: int=None, subsample: int=1, function: callable=None) -> list:
+        """ Get a list of time series of available data columns saved in a .h5 file
+        
+        Parameters
+        ----------
+
+        h5file : h5py.File
+            HDF5 file object from which data will be read
+
+        columns : list[str]
+            List of keys for data columns to be extracted, eg. ['U', 'K',]
+            
+        per_particle : bool
+            Bolean flag determining whether date should be returned divided by number of particles (default True)
+
+        first_block : int
+            First timeblock to include in returned data (default 0) 
+        
+        last_block : int or None
+            last timeblock to include in returned data 
+            (default None, i.e. include last available timeblock)
+        
+        subsample : int 
+            If '2' return every second entry in saved time-series, etc (default 1)  
+        
+        function : callable  
+            function applied to each time series data before returning, e.g.: np.mean (default None)
+
+        Returns
+        -------
+        list : A list numpy arrays, one for each column asked for - or the results of applying 'function' to these 
+        
+        """
+
         _, N, D = h5file['initial_configuration']['vectors'].shape
 
         h5grp = h5file['scalar_saver']
         scalar_names = list(h5grp.attrs['scalar_names'])
 
         output = []
-        for column in columns: 
+        for column in columns:
             index = scalar_names.index(column)
             data = np.ravel(h5grp['scalars'][first_block:last_block,:,index])[::subsample]
             if per_particle:
@@ -268,11 +328,45 @@ class ScalarSaver(RuntimeAction):
 
             if function:
                 data = function(data)
-        
+
             output.append(data)
         return output
-        
+
     def get_times(h5file, first_block=0, last_block=None, reset_time=True, subsample=1):
+        """ Get a numpy array with times associated with data columns saved by ScalarSaver in a .h5 file
+        
+        Parameters
+        ----------
+        h5file : h5py.File
+            HDF5 file object from which data will be read
+
+        first_block : int
+            First timeblock to include in returned data (default 0) 
+        
+        last_block : int ot None
+            last timeblock to include in returned data 
+            (default None, i.e. include last available timeblock)
+
+        reset_time : bool 
+            Bolean flag determining whether the returned times should start from zero (default True)
+        
+        subsample : int 
+            If '2' return every second entry in saved time-series, etc (1) 
+
+        Returns
+        -------
+        np.array : A numpy arrays with simulation times
+        
+        Seed also
+        ---------
+
+        :function:`ScalarSaver.extract`
+        
+        """
+
         num_timeblock, saves_per_timeblock = h5file['scalar_saver']['scalars'][first_block:last_block,:,0].shape
-        times_array = np.arange(0,num_timeblock*saves_per_timeblock, step=subsample)*h5file.attrs['dt']
+        times_array = np.arange(0,num_timeblock*saves_per_timeblock, step=subsample, dtype=float) 
+        if not reset_time:
+            times_array += first_block * saves_per_timeblock
+        times_array *= float(h5file['scalar_saver'].attrs['steps_between_output']) * h5file.attrs['dt']
         return times_array
