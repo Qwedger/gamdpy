@@ -1,11 +1,11 @@
 """ Investigation of thermodynamic properties
 
 This example show how thermodynamic data can be extracted
-using the `extract_scalars` function from the `gamdpy` package.
+using the `ScalarSaver.extract()` function from the `gamdpy` package.
 
     Usage:
 
-    analyze_thermodynamics filename
+    python3 analyze_thermodynamics filename
 """
 
 import matplotlib.pyplot as plt
@@ -33,20 +33,14 @@ simbox = output['initial_configuration'].attrs['simbox_data']
 volume = np.prod(simbox)
 rho = N/volume
 
-# Extract potential energy (U), virial (W), and kinetic energy (K)python
+# Extract potential energy (U), virial (W), and kinetic energy (K)
 # first_block can be used to skip the initial "equilibration".
-U, W, K = gp.extract_scalars(output, ['U', 'W', 'K'], first_block=0)
+U, W, K = gp.ScalarSaver.extract(output, columns=['U', 'W', 'K'], per_particle=False, first_block=0)
+times = gp.ScalarSaver.get_times(output, first_block=0)
 
 mU = np.mean(U)
 mW = np.mean(W)
 mK = np.mean(K)
-
-# Hack to find parts of data not valid
-#print(np.mean(K>0))
-
-# Time
-dt = output.attrs['dt']
-time = np.arange(len(U)) * dt * output['scalar_saver'].attrs['steps_between_output']
 
 # Compute mean kinetic temperature
 dof = D * N - D  # degrees of freedom
@@ -63,11 +57,9 @@ R = np.dot(dW,dU)/(np.dot(dW,dW)*np.dot(dU,dU))**0.5
 
 # Plot 
 plotindex = range(len(U))
-#print(len(plotindex))
 if len(U)>max_plot_points:
     step = int(len(U)/max_plot_points+1)
     plotindex = plotindex[::step]
-#print(len(plotindex))
 
 title = f'N={N},  rho={rho:.3f},  Tkin={np.mean(T_kin):.3f},  P={np.mean(P):.3f},  R={R:.3f},  gamma={gamma:.3f}'
 
@@ -83,17 +75,17 @@ axs[1].grid(linestyle='--', alpha=0.5)
 axs[2].grid(linestyle='--', alpha=0.5)
 
 label  = f'mean: {mU/N:.3f}   std: {np.std(U/N):.3f}'
-axs[0].plot(time[plotindex], U[plotindex] / N, label=label)
+axs[0].plot(times[plotindex], U[plotindex] / N, label=label)
 axs[0].axhline(mU / N, color='k', linestyle='--')
 axs[0].legend(loc=     'upper right')
 
 label  = f'mean: {mW/N:.3f}   std: {np.std(W/N):.3f}'
-axs[1].plot(time[plotindex], W[plotindex] / N, label=label)
+axs[1].plot(times[plotindex], W[plotindex] / N, label=label)
 axs[1].axhline(mW / N, color='k', linestyle='--')
 axs[1].legend(loc=     'upper right')
 
 label  = f'mean: {mK/N:.3f}   std: {np.std(K/N):.3f}'
-axs[2].plot(time[plotindex], K[plotindex] / N, label=label)
+axs[2].plot(times[plotindex], K[plotindex] / N, label=label)
 axs[2].axhline(mK / N, color='k', linestyle='--')
 axs[2].legend(loc=     'upper right')
 

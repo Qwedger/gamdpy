@@ -445,7 +445,8 @@ class Configuration:
         self.vectors['r'] *= scale_factor
         self.simbox.scale(scale_factor)
 
-    def save(self, output: h5py.File, group_name: str, mode: str="w", include_topology: bool=False) -> None:
+    def save(self, output: h5py.File, group_name: str, mode: str="w", 
+             include_topology: bool=False, verbose: bool=True) -> None:
         """ Write a configuration to a HDF5 file
     
         Parameters
@@ -463,6 +464,12 @@ class Configuration:
 
         mode: str
             default value is "w" and corresponds to replacing existing dataset
+
+        include_topology : bool
+            Boolean flag indicating whether the topology of the configuration should be included
+
+        verbose : bool
+            Boolean flag indicating whether messages should be written            
 
         Example
         -------
@@ -487,7 +494,8 @@ class Configuration:
         #print(f"group_name {isinstance(group_name, str)} {group_name}")
         # Creating group group_name in h5 root
         if group_name in output.keys() and mode=="w":
-            print(f"{group_name} already present in h5 root, replacing it")
+            if verbose:
+                print(f"{group_name} already present in h5 root, replacing it")
             del output[f'{group_name}']
             output.create_group(group_name)
         # Checks if group group_name exists in case mode="append"
@@ -496,7 +504,8 @@ class Configuration:
         elif group_name not in output.keys() and mode=="w":
             output.create_group(group_name)
         elif group_name in output.keys() and mode=="a":
-            print(f"append data to {group_name} in h5 root")
+            if verbose:
+                print(f"append data to {group_name} in h5 root")
         else:
             raise ValueError("Unexpected combination of input in save method of Configuration")
 

@@ -36,21 +36,26 @@ pair_pot = gp.PairPotential(pair_func, params=[sig, eps, cut], max_num_nbs=1000)
 integratorNVT = gp.integrators.NVT(temperature=my_T, tau=0.2, dt=0.001)
 
 # Setup runtime actions, i.e. actions performed during simulation of timeblocks
-runtime_actions = [gp.TrajectorySaver(),
-                   gp.ScalarSaver(32),
+runtime_actions = [gp.RestartSaver(),
+                   gp.TrajectorySaver(),
+                   gp.ScalarSaver(steps_between_output=32),
                    gp.MomentumReset(100)]
 
 sim = gp.Simulation(configuration, pair_pot, integratorNVT, runtime_actions, 
                     num_timeblocks=8, steps_per_timeblock=16384,
                     storage='memory')
 # Equilibration run
-print("Running NVT simulation at (\\rho, T) = ({my_rho},{my_T})")
+print(f"Running NVT simulation at (\\rho, T) = ({my_rho},{my_T})")
+
 print("Equilibration")
-sim.run()
-# Data run
-print("Data run")
-sim.run()
-U, W, K, Vol = gp.extract_scalars(sim.output, ['U', 'W', 'K', 'Vol'], first_block=1)
+for block in sim.run_timeblocks():
+    print(sim.status(per_particle=True))
+
+print("Production")
+for block in sim.run_timeblocks():
+    print(sim.status(per_particle=True))
+
+U, W, K, Vol = gp.ScalarSaver.extract(sim.output, ['U', 'W', 'K', 'Vol'], per_particle=False, first_block=1)
 # Full c_V (not excess)
 c_V = np.std(U+K)**2/my_T**2/configuration.N
 dU = U - np.mean(U)
@@ -70,9 +75,16 @@ print()
 sim = gp.Simulation(configuration, pair_pot, integrator, runtime_actions,
                     num_timeblocks=8, steps_per_timeblock=16384,
                     storage='memory')
-sim.run()
-sim.run()
-U, W, K, Vol = gp.extract_scalars(sim.output, ['U', 'W', 'K', 'Vol'], first_block=1)
+
+print("Equilibration")
+for block in sim.run_timeblocks():
+    print(sim.status(per_particle=True))
+
+print("Production")
+for block in sim.run_timeblocks():
+    print(sim.status(per_particle=True))
+
+U, W, K, Vol = gp.ScalarSaver.extract(sim.output, ['U', 'W', 'K', 'Vol'], per_particle=False, first_block=1)
 H = K + U + my_p * Vol      # enthalpy H = Etot + PV  
 dH = H - np.mean(H)
 dV = Vol - np.mean(Vol)
