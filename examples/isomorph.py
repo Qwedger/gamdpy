@@ -40,7 +40,8 @@ for index, rho in enumerate(rhos):
     integrator = gp.integrators.NVT(temperature=T, tau=0.2, dt=0.0025)
 
     # Setup runtime actions, i.e. actions performed during simulation of timeblocks
-    runtime_actions = [gp.TrajectorySaver(),
+    runtime_actions = [gp.RestartSaver(),
+                       gp.TrajectorySaver(),
                        gp.ScalarSaver(16, {'W':True}),
                        gp.MomentumReset(100)]
 
@@ -64,7 +65,7 @@ for index, rho in enumerate(rhos):
     print(sim.status(per_particle=True))
     
     # Do data analysis
-    U, W = gp.extract_scalars(sim.output, ['U', 'W'], first_block=1)
+    U, W = gp.ScalarSaver.extract(sim.output, ['U', 'W'], per_particle=False, first_block=1)
     dU = U - np.mean(U)
     dW = W - np.mean(W)
     gamma = np.dot(dW,dU)/np.dot(dU,dU)

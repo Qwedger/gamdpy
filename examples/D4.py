@@ -22,7 +22,8 @@ pair_pot = gp.PairPotential(pair_func, params=[sig, eps, cut], max_num_nbs=1000)
 integrator = gp.integrators.NVT(temperature=temperature, tau=0.08, dt=0.001)
 
 # Setup runtime actions, i.e. actions performed during simulation of timeblocks
-runtime_actions = [gp.TrajectorySaver(),
+runtime_actions = [gp.RestartSaver(),
+                   gp.TrajectorySaver(),
                    gp.ScalarSaver(),
                    gp.MomentumReset(100)]
 
@@ -33,10 +34,15 @@ sim = gp.Simulation(configuration, pair_pot, integrator, runtime_actions,
                     storage='memory')
 
 # Run simulation
-sim.run(verbose=False)
-sim.run(verbose=False)
+print("Equilibration")
+for block in sim.run_timeblocks():
+    print(sim.status(per_particle=True))
 
-U, W, K = gp.extract_scalars(sim.output, ['U', 'W', 'K'], first_block=1)
+print("Production")
+for block in sim.run_timeblocks():
+    print(sim.status(per_particle=True))
+
+U, W, K = gp.ScalarSaver.extract(sim.output, ['U', 'W', 'K'], per_particle=False, first_block=1)
 dU = U - np.mean(U)
 dW = W - np.mean(W)
 gamma = np.dot(dW,dU)/np.dot(dU,dU)
