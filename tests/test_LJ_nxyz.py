@@ -66,7 +66,7 @@ def LJ(nx, ny, nz, rho=0.8442, pb=None, tp=None, skin=None, gridsync=None, Utili
 
     # Make conversion to dataframe a method at some point...
     columns = ['U', 'W', 'lapU', 'Fsq', 'K']
-    data = np.array(gp.extract_scalars(sim.output, columns, first_block=1))
+    data = np.array(gp.ScalarSaver.extract(sim.output, columns, per_particle=False, first_block=1))
     df = pd.DataFrame(data.T, columns=columns)
     return df
 
@@ -74,9 +74,9 @@ def get_results_from_df(df, N, D):
     df['E'] = df['U'] + df['K'] # Total energy
     df['Tkin'] =2*df['K']/D/(N-1)
     df['Tconf'] = df['Fsq']/df['lapU']
-    df['dU'] = df['U'] - np.mean(df['U'])
-    df['dE'] = df['E'] - np.mean(df['E'])
-    df['dW'] = df['W'] - np.mean(df['W'])
+    #df['dU'] = df['U'] - np.mean(df['U'])
+    #df['dE'] = df['E'] - np.mean(df['E'])
+    #df['dW'] = df['W'] - np.mean(df['W'])
 
     df2 = df.drop(range(len(df)//2))
 
