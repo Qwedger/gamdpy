@@ -33,8 +33,9 @@ with h5py.File(filename, 'r') as h5file:
     U, = gp.ScalarSaver.extract(h5file, columns=['U'], first_block=0, subsample=2)
     print(f'{U.shape=}, {times.shape=}\n')
 
-    plt.plot(times, U, '.-')
-    plt.show(block=True)
+    if __name__ == "__main__":
+        plt.plot(times, U, '.-')
+        plt.show(block=True)
 
 # Works also on-the-fly during the simulation:
 sim = gp.get_default_sim()

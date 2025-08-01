@@ -77,7 +77,7 @@ sim = gp.Simulation(configuration1, [pair_pot], integrator, runtime_actions,
                     storage='memory')
 
 output = gp.tools.TrajectoryIO(filename).get_h5()
-nblocks, nconfs, N, D = output['trajectory_saver/positions'].shape
+nblocks, nconfs, N, D = output['trajectory/positions'].shape
 
 if num_timeblocks==0:
     num_timeblocks=nblocks
@@ -92,11 +92,11 @@ with h5py.File(quench_filename, "w") as f:
     configuration1.save(f, group_name="initial_configuration", mode="w", include_topology=True)
     f.attrs['dt'] = output.attrs['dt']
     
-    f.create_dataset('trajectory_saver/positions',
+    f.create_dataset('trajectory/positions',
         shape=(num_timeblocks, num_configurations, configuration1.N, configuration1.D),
         chunks=(1, 1, configuration1.N, configuration1.D),
         dtype=np.float32)
-    f.create_dataset('trajectory_saver/images',
+    f.create_dataset('trajectory/images',
         shape=(num_timeblocks, num_configurations, configuration1.N, configuration1.D),
         chunks=(1, 1, configuration1.N, configuration1.D),
         dtype=np.int32)
@@ -130,8 +130,8 @@ for saved_timeblock in range(num_timeblocks):
 
         u_mins[saved_conf, saved_timeblock] = u_min
         with h5py.File(quench_filename, "a") as f:
-            f['trajectory_saver/positions'][saved_timeblock,saved_conf,:,:] = configuration2['r']
-            f['trajectory_saver/images'][saved_timeblock,saved_conf,:,:] = configuration1.r_im  # GD was done on configuration1
+            f['trajectory/positions'][saved_timeblock,saved_conf,:,:] = configuration2['r']
+            f['trajectory/images'][saved_timeblock,saved_conf,:,:] = configuration1.r_im  # GD was done on configuration1
         
 plt.plot(u_mins, '.-')
 

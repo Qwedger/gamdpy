@@ -74,9 +74,9 @@ def calc_dynamics(trajectory, first_block, qvalues=None):
     num_types = np.max(ptype) + 1
     if isinstance(qvalues, float):
         qvalues = np.ones(num_types)*qvalues
-    num_blocks, conf_per_block, N, D = trajectory['trajectory_saver/positions'].shape
-    blocks = trajectory['trajectory_saver/positions']  # If picking out dataset in inner loop: Very slow!
-    images = trajectory['trajectory_saver/images']
+    num_blocks, conf_per_block, N, D = trajectory['trajectory/positions'].shape
+    blocks = trajectory['trajectory/positions']  # If picking out dataset in inner loop: Very slow!
+    images = trajectory['trajectory/images']
     if simbox_name == "Orthorhombic":
         simbox = simbox_data
     elif simbox_name == "LeesEdwards":

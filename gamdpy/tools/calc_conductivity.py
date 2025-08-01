@@ -88,9 +88,9 @@ def calc_conductivity(trajectory, first_block, charges):
     attributes = trajectory.attrs
     
     simbox = trajectory['initial_configuration'].attrs['simbox_data'].copy()
-    num_blocks, conf_per_block, N, D = trajectory['trajectory_saver/positions'].shape
-    blocks = trajectory['trajectory_saver/positions']  # If picking out dataset in inner loop: Very slow!
-    images = trajectory['trajectory_saver/images']
+    num_blocks, conf_per_block, N, D = trajectory['trajectory/positions'].shape
+    blocks = trajectory['trajectory/positions']  # If picking out dataset in inner loop: Very slow!
+    images = trajectory['trajectory/images']
 
     #print(num_types, first_block, num_blocks, conf_per_block, _, N, D, qvalues)
     if first_block > num_blocks - 1:

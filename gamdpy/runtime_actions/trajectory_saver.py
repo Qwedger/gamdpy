@@ -65,16 +65,16 @@ class TrajectorySaver(RuntimeAction):
         #self.sid = {"r":0, "r_im":1}
 
     def extract_positions(h5file):
-        return h5file['trajectory_saver/positions']
+        return h5file['trajectory/positions']
 
     def extract_images(h5file):
-        return h5file['trajectory_saver/images']
+        return h5file['trajectory/images']
 
     def extract_velocities(h5file):
-        return h5file['trajectory_saver/velocities']
+        return h5file['trajectory/velocities']
 
     def extract_forces(h5file):
-        return h5file['trajectory_saver/forces']
+        return h5file['trajectory/forces']
 
     def setup(self, configuration, num_timeblocks: int, steps_per_timeblock: int, output, verbose=False) -> None:
         self.configuration = configuration
@@ -99,9 +99,9 @@ class TrajectorySaver(RuntimeAction):
         if verbose:
             print(f'Storing results in memory. Expected footprint {self.num_timeblocks * self.conf_per_block * self.num_vectors * self.configuration.N * self.configuration.D * 4 / 1024 / 1024:.2f} MB.')
 
-        if 'trajectory_saver' in output.keys():
-            del output['trajectory_saver']
-        output.create_group('trajectory_saver')
+        if 'trajectory' in output.keys():
+            del output['trajectory']
+        output.create_group('trajectory')
 
         # Compression has a different syntax depending if is gzip or not because gzip can have also a compression_opts
         # it is possible to use compression=None for not compressing the data
@@ -114,23 +114,23 @@ class TrajectorySaver(RuntimeAction):
         #        chunks=(1, 1, self.configuration.N, self.configuration.D),
         #        dtype=np.int32,  compression=self.compression, compression_opts=self.compression_opts)
         for key in self.saving_list:
-            output.create_dataset(f'trajectory_saver/{key}',
+            output.create_dataset(f'trajectory/{key}',
                     shape=(self.num_timeblocks, self.conf_per_block, self.configuration.N, self.configuration.D),
                     chunks=(1, 1, self.configuration.N, self.configuration.D),
                     dtype=self.datatypes[f'{key}'], compression=self.compression, compression_opts=self.compression_opts)
 
-        output['trajectory_saver'].attrs['compression_info'] = f"{self.compression} with opts {self.compression_opts}"
-        output['trajectory_saver'].attrs['scheduler'] = self.scheduler.__class__.__name__
-        output['trajectory_saver'].attrs['scheduler_info'] = json.dumps(self.scheduler.kwargs)
-        output['trajectory_saver'].attrs['num_timeblocks'] = self.num_timeblocks
-        output['trajectory_saver'].attrs['steps_per_timeblock'] = self.steps_per_timeblock
+        output['trajectory'].attrs['compression_info'] = f"{self.compression} with opts {self.compression_opts}"
+        output['trajectory'].attrs['scheduler'] = self.scheduler.__class__.__name__
+        output['trajectory'].attrs['scheduler_info'] = json.dumps(self.scheduler.kwargs)
+        output['trajectory'].attrs['num_timeblocks'] = self.num_timeblocks
+        output['trajectory'].attrs['steps_per_timeblock'] = self.steps_per_timeblock
         # output['trajectory_saver'].create_dataset('steps', data=self.scheduler.steps)
 
         #output.attrs['vectors_names'] = list(self.sid.keys())
         if self.include_simbox:
-            if 'sim_box' in output['trajectory_saver'].keys():
-                del output['trajectory_saver/sim_box']
-            output.create_dataset('trajectory_saver/sim_box', 
+            if 'sim_box' in output['trajectory'].keys():
+                del output['trajectory/sim_box']
+            output.create_dataset('trajectory/sim_box', 
                                   shape=(self.num_timeblocks, self.conf_per_block, self.configuration.simbox.len_sim_box_data))
 
         flag = config.CUDA_LOW_OCCUPANCY_WARNINGS
@@ -174,10 +174,10 @@ class TrajectorySaver(RuntimeAction):
         # note that d_conf_array has dimensions (self.conf_per_block, 2, self.configuration.N, self.configuration.D)
         #output_reference['trajectory_saver/positions'][timeblock], output_reference['trajectory_saver/images'][timeblock] = data[:, 0], data[:, 1]
         for key in self.saving_list:
-            output_reference[f'trajectory_saver/{key}'][timeblock] = data[:,self.saving_list.index(key)]
+            output_reference[f'trajectory/{key}'][timeblock] = data[:,self.saving_list.index(key)]
         #output['trajectory_saver'][block, :] = self.d_conf_array.copy_to_host()
         if self.include_simbox:
-            output_reference['trajectory_saver/sim_box'][timeblock, :] = self.d_sim_box_output_array.copy_to_host()
+            output_reference['trajectory/sim_box'][timeblock, :] = self.d_sim_box_output_array.copy_to_host()
         self.zero_kernel(self.d_conf_array)
 
     def get_poststep_kernel(self, configuration, compute_plan, verbose=False):
