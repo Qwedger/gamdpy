@@ -31,21 +31,29 @@ integrator = gp.integrators.NPT_Atomic(temperature=target_temperature,
                                        dt=0.001)
 
 # Setup runtime actions, i.e. actions performed during simulation of timeblocks
-runtime_actions = [gp.TrajectorySaver(), 
+runtime_actions = [gp.RestartSaver(),
+                   gp.TrajectorySaver(), 
                    gp.ScalarSaver(32), 
                    gp.MomentumReset(100)]
 
 
 # NPT Simulation 
 sim = gp.Simulation(configuration, pair_pot, integrator, runtime_actions,
-                    num_timeblocks=16, steps_per_timeblock=2048,
+                    num_timeblocks=16, steps_per_timeblock=1 * 1024,
                     storage='memory')
 
-sim.run()  # Equilibration run
-sim.run()  # Production run
+print("Equilibration")
+for block in sim.run_timeblocks():
+    print(sim.status(per_particle=True))
+print(sim.summary())
+
+print("Production")
+for block in sim.run_timeblocks():
+    print(sim.status(per_particle=True))
+print(sim.summary())
 
 # Thermodynamic properties
-U, W, K, V = gp.extract_scalars(sim.output, ['U', 'W', 'K', 'Vol'], first_block=1)
+U, W, K, V = gp.ScalarSaver.extract(sim.output, ['U', 'W', 'K', 'Vol'], per_particle=False, first_block=1)
 print(f'Mean U: {np.mean(U)/configuration.N}')
 print(f'Kinetic temperature (consistency check): {2*np.mean(K)/3/(configuration.N-1)}')
 print(f'Pressure (consistency check): {(2*np.mean(K)/3+np.mean(W))/np.mean(V)}')

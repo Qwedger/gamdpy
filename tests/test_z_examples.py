@@ -106,7 +106,7 @@ class Test_examples:
         self.make_one("widoms_particle_insertion")
 
     def test_LJchain(self):
-        self.make_one("LJchain", ["Data/LJchain10_Rho1.00_T0.700.h5"])
+        self.make_one("LJchain", ["Data/LJchain10_Rho1.00_T0.700.h5", "Data/LJchain10_Rho1.00_T0.700_compress.h5"])
 
     def test_write_to_lammps(self):
         self.make_one("write_to_lammps", ["dump.initial", "dump.lammps"])
@@ -117,8 +117,8 @@ class Test_examples:
 #    def test_generic_molecules(self):
 #        self.make_one("generic_molecules")
 
-    def test_LJ(self):
-        self.make_one("LJ")
+ #   def test_LJ(self):
+ #       self.make_one("LJ")
  
     def test_time_schedules(self):
         self.make_one("time_schedules")

@@ -1,7 +1,6 @@
 """ Example of simulation for a LJ system using NVU integrator """
 
 import gamdpy as gp
-import pandas as pd
 import numpy as np
 from numba import config
 import matplotlib.pyplot as plt
@@ -15,7 +14,7 @@ temperature = 0.800
 
 # Setup configuration: FCC Lattice
 configuration = gp.Configuration(D=3, compute_flags={'Fsq':True, 'lapU':True, 'Vol':True})
-configuration.make_positions(N=5*5*5*4, rho=1.2)
+configuration.make_positions(N=500, rho=1.2)
 configuration['m'] = 1.0 # Specify all masses to unity
 configuration.randomize_velocities(temperature=2.0) # Initial high temperature for randomizing
 configuration.ptype[::5] = 1 # Every fifth particle set to type 1 (4:1 mixture)
@@ -51,7 +50,9 @@ NVT_sim = gp.Simulation(configuration, pair_pot, NVT_integrator, runtime_actions
 
 
 #Running the NVT simulation
-NVT_sim.run()
+for block in NVT_sim.run_timeblocks():
+    print(NVT_sim.status(per_particle=True))
+print(NVT_sim.summary())
 
 for i in range(2): print()
 print("Step 2/3: Continuing the NVT simulation with T = 0.8 in order to find the",
@@ -62,24 +63,19 @@ runtime_actions = [gp.MomentumReset(100),
                    gp.TrajectorySaver(),
                     gp.ScalarSaver(2, {'Fsq':True, 'lapU':True}), ]
 
-
 NVT_integrator = gp.integrators.NVT(temperature = temperature, tau = 0.2, dt = 0.004)
 NVT_sim = gp.Simulation(configuration, pair_pot, NVT_integrator, runtime_actions,
                         num_timeblocks = 64, steps_per_timeblock = 1024,
                         storage = 'memory')
 
-
 #Running the NVT simulation
-NVT_sim.run()
+for block in NVT_sim.run_timeblocks():
+    print(NVT_sim.status(per_particle=True))
+print(NVT_sim.summary())
 
 
-#
 #Finding the average potential energy (= U_0) of the run.
-columns = ['U']
-data = np.array(gp.extract_scalars(NVT_sim.output, columns, first_block=8))
-df = pd.DataFrame(data.T, columns=columns)
-U_0 = np.mean(df['U'])/configuration.N
-
+U_0, = gp.ScalarSaver.extract(NVT_sim.output, ['U',], per_particle=True, first_block=8, function=np.mean)
 
 for i in range(2): print()
 
@@ -87,22 +83,23 @@ print("Step 3/3: Running the NVU simulation using the final configuration",
       "from the previous NVT simulation and the average PE as the", 
       f"constant-potential energy: U_0 = {np.round(U_0,3)} (pr particle)")
 for i in range(2): print()
+
 #Setting up the NVU integrator and simulation. Note, that dt = dl.
 NVU_integrator = gp.integrators.NVU(U_0 = U_0, dl = dl)
 
-runtime_actions = [gp.MomentumReset(100),
-                    gp.TrajectorySaver(),
-                    gp.ScalarSaver(4*128, {'Fsq':True, 'lapU':True}), ]
+runtime_actions = [gp.RestartSaver(), 
+                   gp.MomentumReset(100),
+                   gp.TrajectorySaver(),
+                   gp.ScalarSaver(4*128, {'Fsq':True, 'lapU':True}), ]
 
 NVU_sim = gp.Simulation(configuration, pair_pot, NVU_integrator, runtime_actions,
-                        num_timeblocks = 32, steps_per_timeblock = 8*1024, #num_timeblocks = 32
+                        num_timeblocks = 32, steps_per_timeblock = 8*1024, 
                         storage = 'memory')
 
-
 #Running the NVU simulation
-NVU_sim.run()
-
-
+for block in NVU_sim.run_timeblocks():
+    print(NVU_sim.status(per_particle=True))
+print(NVU_sim.summary())
 
 #Calculating dynamics
 NVU_dynamics = gp.tools.calc_dynamics(NVU_sim.output, 16, qvalues=[7.5, 5.5])
@@ -123,22 +120,20 @@ plt.xlim(0.001)
 plt.ylim(0.1**5)
 plt.yscale('log')
 plt.xscale('log')
+
 if __name__ == "__main__":
     plt.show(block=False)
 
 #Calculating the configurational temperature
-columns = ['U', 'lapU', 'Fsq', 'W']
-data = np.array(gp.extract_scalars(NVU_sim.output, columns, first_block=16))
-df = pd.DataFrame(data.T, columns=columns)
-df['Tconf'] = df['Fsq']/df['lapU']
-Tconf = np.mean(df['Tconf'],axis=0)
-
-times = len(df['Tconf'])*128*4*dl
+U, lapU, Fsq, W, = gp.ScalarSaver.extract(NVU_sim.output, ['U', 'lapU', 'Fsq', 'W'], per_particle=True, first_block=16)
+times = gp.ScalarSaver.get_times(NVU_sim.output, first_block=16)
+Tconf = Fsq / lapU
+mTconf = np.mean(Tconf)
 
 
 plt.figure(figsize=(10,4))
-plt.plot(np.arange(len(df['Tconf']))*128*4*dl,np.round(df['Tconf'],2),label = r"$T_{conf}$")
-plt.plot((0,times),(temperature,temperature), label = f"Set temperature (T = {temperature})")
+plt.plot(times, Tconf ,label = r"$T_{conf}$")
+plt.plot((0,times[-1]),(temperature,temperature), label = f"Set temperature (T = {temperature})")
 plt.ylabel("Temperature")
 plt.xlabel("t")
 plt.legend()
@@ -146,8 +141,8 @@ if __name__ == "__main__":
     plt.show(block=False)
 
 plt.figure(figsize=(10,4))
-plt.plot(np.arange(len(df['U']))*128*4*dl,df['U']/configuration.N, label = "U(t)")
-plt.plot((0,times),(U_0,U_0), label = f"U_0 = {np.round(U_0,3)}")
+plt.plot(times, U, label = "U(t)")
+plt.plot((0,times[-1]),(U_0,U_0), label = f"U_0 = {np.round(U_0,3)}")
 plt.ylabel("Potential energy")
 plt.xlabel("t")
 plt.legend()

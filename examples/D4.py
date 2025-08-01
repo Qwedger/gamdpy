@@ -37,10 +37,14 @@ sim = gp.Simulation(configuration, pair_pot, integrator, runtime_actions,
 print("Equilibration")
 for block in sim.run_timeblocks():
     print(sim.status(per_particle=True))
+print(sim.summary())
 
 print("Production")
 for block in sim.run_timeblocks():
     print(sim.status(per_particle=True))
+print(sim.summary())
+
+
 
 U, W, K = gp.ScalarSaver.extract(sim.output, ['U', 'W', 'K'], per_particle=False, first_block=1)
 dU = U - np.mean(U)
