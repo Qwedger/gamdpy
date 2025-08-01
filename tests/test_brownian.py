@@ -69,7 +69,7 @@ def test_brownain_simulation(verbose=False, plot=False):
         print(sim.summary())
 
     N = configuration.N
-    U, W, K = gp.extract_scalars(sim.output, ['U', 'W', 'K'], first_block=1)
+    U, W, K = gp.ScalarSaver.extract(sim.output, ['U', 'W', 'K'], per_particle=False, first_block=1)
     if plot:
         import matplotlib.pyplot as plt
         plt.figure()

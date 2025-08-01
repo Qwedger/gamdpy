@@ -45,10 +45,10 @@ class StressSaver(RuntimeAction):
 
         # Setup output
         shape = (self.num_timeblocks, self.stress_saves_per_block, D, D)
-        if 'stress_saver' in output.keys():
-            del output['stress_saver']
-        grp = output.create_group('stress_saver')
-        output.create_dataset('stress_saver/stress_tensor', shape=shape,
+        if 'stresses' in output.keys():
+            del output['stresses']
+        grp = output.create_group('stresses')
+        output.create_dataset('stresses/stress_tensor', shape=shape,
                 chunks=(1, self.stress_saves_per_block, D, D), dtype=np.float32)
         grp.attrs['steps_between_output'] = self.steps_between_output
 
@@ -85,7 +85,7 @@ class StressSaver(RuntimeAction):
 
     def update_at_end_of_timeblock(self, timeblock: int, output_reference):
         volume = self.configuration.get_volume()
-        output_reference['stress_saver/stress_tensor'][timeblock, :] = self.d_output_array.copy_to_host() / volume
+        output_reference['stresses/stress_tensor'][timeblock, :] = self.d_output_array.copy_to_host() / volume
 
 
     def get_prestep_kernel(self, configuration, compute_plan):
@@ -155,13 +155,13 @@ class StressSaver(RuntimeAction):
     def extract(h5file, first_block=0, last_block=None, subsample=1):
 
         #stress_data = h5file['stress_saver/stress_tensor']
-        h5grp = h5file['stress_saver']
+        h5grp = h5file['stresses']
         nblocks, per_block, D, D2 = h5grp['stress_tensor'].shape
         assert D == D2
         final_rows = (nblocks-first_block) * per_block
         return h5grp['stress_tensor'][first_block:last_block,:,:, :].reshape(final_rows, D, D)[::subsample]
 
     def get_times(h5file, first_block=0, last_block=None, reset_time=True, subsample=1):
-        num_timeblock, saves_per_timeblock = h5file['stress_saver']['stress_tensor'][first_block:last_block,:,0,0].shape
+        num_timeblock, saves_per_timeblock = h5file['stresses/stress_tensor'][first_block:last_block,:,0,0].shape
         times_array = np.arange(0,num_timeblock*saves_per_timeblock, step=subsample)*h5file.attrs['dt']
         return times_array

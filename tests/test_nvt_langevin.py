@@ -51,7 +51,7 @@ def test_step_langevin(verbose=False, plot_figures=False) -> None:
 
     # Convert scalars to dataframe
     columns = ['U', 'W', 'K']
-    data = np.array(gp.extract_scalars(sim.output, columns, first_block=1))
+    data = np.array(gp.ScalarSaver.extract(sim.output, columns, per_particle=False, first_block=1))
     df = pd.DataFrame(data.T/configuration.N, columns=columns) 
 
     # Compute summary statistics

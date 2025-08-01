@@ -44,7 +44,7 @@ def test_NVU():
 
     #Finding the average potential energy (= U_0) of the run.
     columns = ['U']
-    data = np.array(gp.extract_scalars(NVT_sim.output, columns, first_block=4))
+    data = np.array(gp.ScalarSaver.extract(NVT_sim.output, columns, per_particle=False, first_block=4))
     df = pd.DataFrame(data.T, columns=columns)
     U_0 = np.mean(df['U'])/configuration.N
 
@@ -63,7 +63,7 @@ def test_NVU():
     
     #Calculating the configurational temperature
     columns = ['U', 'lapU', 'Fsq']
-    data = np.array(gp.extract_scalars(NVU_sim.output, columns, first_block=4))
+    data = np.array(gp.ScalarSaver.extract(NVU_sim.output, columns, per_particle=False, first_block=4))
     df = pd.DataFrame(data.T, columns=columns)
     df['Tconf'] = df['Fsq']/df['lapU']
     Tconf = np.mean(df['Tconf'],axis=0)
@@ -105,7 +105,7 @@ def test_NVU():
 
     # Finding the average potential energy (= U_0) of the run.
     columns = ['U']
-    data = np.array(gp.extract_scalars(NVT_sim.output, columns, first_block=4))
+    data = np.array(gp.ScalarSaver.extract(NVT_sim.output, columns, per_particle=False, first_block=4))
     df = pd.DataFrame(data.T, columns=columns)
     U_0 = np.mean(df['U'])/configuration.N
 
@@ -124,7 +124,7 @@ def test_NVU():
 
     #Calculating the configurational temperature
     columns = ['U', 'lapU', 'Fsq']
-    data = np.array(gp.extract_scalars(NVU_sim.output, columns, first_block=4))
+    data = np.array(gp.ScalarSaver.extract(NVU_sim.output, columns, per_particle=False, first_block=4))
     df = pd.DataFrame(data.T, columns=columns)
     df['Tconf'] = df['Fsq']/df['lapU']
     Tconf = np.mean(df['Tconf'],axis=0)

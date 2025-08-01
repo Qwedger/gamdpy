@@ -20,7 +20,7 @@ def print_h5_structure(node, indent=0):
             dihedrals  (Dataset, shape=(0,), dtype=int32)
             molecules/ (Group)
         vectors  (Dataset, shape=(3, 2048, 3), dtype=float32)
-    scalar_saver/ (Group)
+    scalars/ (Group)
         scalars  (Dataset, shape=(8, 64, 3), dtype=float32)
     trajectory/ (Group)
         images  (Dataset, shape=(8, 12, 2048, 3), dtype=int32)
@@ -61,7 +61,7 @@ def print_h5_attributes(obj, path="/"):
         - names: []
     Attributes at /initial_configuration/vectors:
         - vector_columns: ['r' 'v' 'f']
-    Attributes at /scalar_saver/:
+    Attributes at /scalars/:
         - compression_info: gzip with opts 4
         - scalar_names: ['U' 'W' 'K']
         - steps_between_output: 16

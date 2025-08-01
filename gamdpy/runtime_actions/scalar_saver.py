@@ -68,19 +68,19 @@ class ScalarSaver(RuntimeAction):
 
         # Setup output
         shape = (self.num_timeblocks, self.scalar_saves_per_block, self.num_scalars)
-        if 'scalar_saver' in output.keys():
-            del output['scalar_saver']
-        output.create_group('scalar_saver')
+        if 'scalars' in output.keys():
+            del output['scalars']
+        output.create_group('scalars')
 
         # Compression has a different syntax depending if is gzip or not because gzip can have also a compression_opts
         # it is possible to use compression=None for not compressing the data
-        output.create_dataset('scalar_saver/scalars', shape=shape,
+        output.create_dataset('scalars/scalars', shape=shape,
                 chunks=(1, self.scalar_saves_per_block, self.num_scalars),
                 dtype=np.float32, compression=self.compression, compression_opts=self.compression_opts)
-        output['scalar_saver'].attrs['compression_info'] = f"{self.compression} with opts {self.compression_opts}"
+        output['scalars'].attrs['compression_info'] = f"{self.compression} with opts {self.compression_opts}"
 
-        output['scalar_saver'].attrs['steps_between_output'] = self.steps_between_output
-        output['scalar_saver'].attrs['scalar_names'] = list(self.sid.keys())
+        output['scalars'].attrs['steps_between_output'] = self.steps_between_output
+        output['scalars'].attrs['scalar_names'] = list(self.sid.keys())
 
         flag = config.CUDA_LOW_OCCUPANCY_WARNINGS
         config.CUDA_LOW_OCCUPANCY_WARNINGS = False
@@ -110,7 +110,7 @@ class ScalarSaver(RuntimeAction):
         self.zero_kernel(self.d_output_array)
 
     def update_at_end_of_timeblock(self,  timeblock: int, output_reference):
-        output_reference['scalar_saver/scalars'][timeblock, :] = self.d_output_array.copy_to_host()
+        output_reference['scalars/scalars'][timeblock, :] = self.d_output_array.copy_to_host()
 
     def get_prestep_kernel(self, configuration, compute_plan, verbose=False):
         pb, tp, gridsync = [compute_plan[key] for key in ['pb', 'tp', 'gridsync']]
@@ -258,7 +258,7 @@ class ScalarSaver(RuntimeAction):
 
         """
 
-        h5grp = h5file['scalar_saver']
+        h5grp = h5file['scalars']
         str = f"\tscalar_names: {h5grp.attrs['scalar_names']}"
         str += f"\n\tscalars, shape: {h5grp['scalars'].shape}, dtype: {h5grp['scalars'].dtype}"
         return str
@@ -277,7 +277,7 @@ class ScalarSaver(RuntimeAction):
         
         """
 
-        return list(h5file['scalar_saver'].attrs['scalar_names'])
+        return list(h5file['scalars'].attrs['scalar_names'])
 
     def extract(h5file: h5py.File, columns: list[str], per_particle: bool=True, 
                 first_block: int=0, last_block: int=None, subsample: int=1, function: callable=None) -> list:
@@ -316,7 +316,7 @@ class ScalarSaver(RuntimeAction):
 
         _, N, D = h5file['initial_configuration']['vectors'].shape
 
-        h5grp = h5file['scalar_saver']
+        h5grp = h5file['scalars']
         scalar_names = list(h5grp.attrs['scalar_names'])
 
         output = []
@@ -364,9 +364,9 @@ class ScalarSaver(RuntimeAction):
         
         """
 
-        num_timeblock, saves_per_timeblock = h5file['scalar_saver']['scalars'][first_block:last_block,:,0].shape
+        num_timeblock, saves_per_timeblock = h5file['scalars/scalars'][first_block:last_block,:,0].shape
         times_array = np.arange(0,num_timeblock*saves_per_timeblock, step=subsample, dtype=float) 
         if not reset_time:
             times_array += first_block * saves_per_timeblock
-        times_array *= float(h5file['scalar_saver'].attrs['steps_between_output']) * h5file.attrs['dt']
+        times_array *= float(h5file['scalars'].attrs['steps_between_output']) * h5file.attrs['dt']
         return times_array

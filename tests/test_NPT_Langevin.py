@@ -79,13 +79,13 @@ def test_NPT_Langevin_isotropic(verbose=False, plot=False):
     assert np.isclose(final_box_lengths[1]/final_box_lengths[0], 1.0, rtol=0.01), f"Box lengths are not cubic: {final_box_lengths}"
     assert np.isclose(final_box_lengths[2]/final_box_lengths[0], 1.0, rtol=0.01), f"Box lengths are not cubic: {final_box_lengths}"
 
-    U, W, K, Vol = gp.extract_scalars(sim.output, ['U', 'W', 'K', 'Vol'], first_block=0)
+    U, W, K, Vol = gp.ScalarSaver.extract(sim.output, ['U', 'W', 'K', 'Vol'], per_particle=False, first_block=0)
 
     if plot:
         # Plot potential energy per particle as a function of time
         # Get times
         dt = sim.output.attrs['dt']  # Timestep
-        time = np.arange(len(U)) * dt * sim.output['scalar_saver'].attrs['steps_between_output']
+        time = np.arange(len(U)) * dt * sim.output['scalars'].attrs['steps_between_output']
 
         import matplotlib.pyplot as plt
         plt.figure()
@@ -194,13 +194,13 @@ def test_NPT_Langevin_isotropic_2d(verbose=False, plot=False):
     # Test need to be changed to a luqid state for this
     #assert np.isclose(final_box_lengths[1]/final_box_lengths[0], 1.0, rtol=0.01), f"Box lengths are not cubic: {final_box_lengths}"
 
-    U, W, K, Vol = gp.extract_scalars(sim.output, ['U', 'W', 'K', 'Vol'], first_block=4)
+    U, W, K, Vol = gp.ScalarSaver.extract(sim.output, ['U', 'W', 'K', 'Vol'], per_particle=False, first_block=4)
 
     if plot:
         # Plot potential energy per particle as a function of time
         # Get times
         dt = sim.output.attrs['dt']  # Timestep
-        time = np.arange(len(U)) * dt * sim.output['scalar_saver'].attrs['steps_between_output']
+        time = np.arange(len(U)) * dt * sim.output['scalars'].attrs['steps_between_output']
 
         import matplotlib.pyplot as plt
         plt.figure()
