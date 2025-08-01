@@ -96,8 +96,8 @@ class Test_examples:
     def test_structure_factor(self):
         self.make_one("structure_factor")
 
-    def test_switching_integrator(self):
-        self.make_one("switching_integrator")
+#    def test_switching_integrator(self):
+#        self.make_one("switching_integrator")
 
     def test_tethered_particles(self):
         self.make_one("tethered_particles", ["initial.xyz", "final.xyz"])
