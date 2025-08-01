@@ -623,7 +623,7 @@ class Simulation():
         return total_min_time, local_min_time
 
 
-    def autotune(self):
+    def autotune(self, include_linked_lists=True):
         """ Autotune the simulation parameters for most efficient calculations on the current machine """
         flag = cuda.config.CUDA_LOW_OCCUPANCY_WARNINGS
         cuda.config.CUDA_LOW_OCCUPANCY_WARNINGS = False
@@ -642,7 +642,7 @@ class Simulation():
         nblists = [initial_compute_plan['nblist'], ]
         if nblists[0] != 'N squared' and self.configuration.N < 32000:
             nblists.append('N squared')
-        if nblists[0] != 'linked lists' and self.configuration.N > 2000:
+        if nblists[0] != 'linked lists' and self.configuration.N > 2000 and include_linked_lists:
             nblists.append('linked lists')
 
         UtilizeNIIIs = [initial_compute_plan['UtilizeNIII'], ]
@@ -791,7 +791,7 @@ class Simulation():
         return total_min_time, local_min_time, min_time
 
     def scan_skin(self, timesteps, repeats, skin, delta_skin, min_time, min_skin):
-        while 0.0 < skin < 1.45: # Should keep on going until eg. linked lists throw an error
+        while abs(delta_skin)/2 < skin < 1.45: # Should keep on going until eg. linked lists throw an error
             self.compute_plan['skin'] = skin
             self.update_params()
             self.configuration.copy_to_device() # By _not_ copying back to host later we dont change configuration
@@ -803,6 +803,7 @@ class Simulation():
             end.record()
             end.synchronize()
             time_elapsed = cuda.event_elapsed_time(start, end)
+            #print(f'{skin=}, {time_elapsed=}')
             if time_elapsed < min_time:
                 min_time = time_elapsed
                 min_skin = skin

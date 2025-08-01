@@ -33,14 +33,14 @@ def setup_lennard_jones_system(nx, ny, nz, rho=0.8442, cut=2.5, verbose=False):
     # Generate configuration with a FCC lattice
     # Setup configuration: FCC Lattice
     c1 = gp.Configuration(D=3)
-    c1.make_lattice(rp.unit_cells.FCC, cells=[nx, ny, nz], rho=rho)
+    c1.make_lattice(gp.unit_cells.FCC, cells=[nx, ny, nz], rho=rho)
     c1['m'] = 1.0
     c1.randomize_velocities(temperature=1.44)
     #  c1 = gp.make_configuration_fcc(nx=nx,  ny=ny,  nz=nz,  rho=rho, T=1.44)
 
     # Setup pair potential.
     #pair_func = gp.apply_shifted_force_cutoff(rp.LJ_12_6_sigma_epsilon)
-    pair_func = gp.apply_shifted_potential_cutoff(rp.LJ_12_6_sigma_epsilon)
+    pair_func = gp.apply_shifted_potential_cutoff(gp.LJ_12_6_sigma_epsilon)
     sig, eps, cut = 1.0, 1.0, 2.5
     pair_pot = gp.PairPotential(pair_func, params=[sig, eps, cut], max_num_nbs=500)
 
@@ -64,9 +64,9 @@ def run_benchmark(c1, pair_pot, compute_plan, steps, integrator='NVE', autotune=
         integrator = gp.integrators.NVT_Langevin(temperature=0.70, alpha=0.2, dt=dt, seed=213)
     
     # Setup Simulation. Total number of timesteps: num_blocks * steps_per_block
-    sim = gp.Simulation(c1, pair_pot, integrator, [rp.MomentumReset(100), ],
+    sim = gp.Simulation(c1, pair_pot, integrator, [gp.MomentumReset(100), ],
                         num_timeblocks=1, steps_per_timeblock=steps,
-                        compute_plan=compute_plan, storage='memory', verbose=False)
+                        compute_plan=compute_plan, storage='memory')
     
     # Run simulation one block at a time
     for block in sim.run_timeblocks():
