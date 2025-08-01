@@ -1,7 +1,7 @@
 """ Investigation of thermodynamic properties
 
 This example show how thermodynamic data can be extracted
-using the `extract_scalars` function from the `gamdpy` package.
+using the `ScalaSaver.extract()` function from the `gamdpy` package.
 
 The script runs a NVT simulation of a Lennard-Jones crystal.
 The potential energy, virial, and kinetic energy are extracted
@@ -48,7 +48,10 @@ sim = gp.Simulation(configuration, pair_pot, integrator, runtime_actions,
                     storage='memory')
 
 # Run simulation
-sim.run()
+for block in sim.run_timeblocks():
+    print(sim.status(per_particle=True))
+print(sim.summary())
+
 
 # Basic information of NVT simulation
 N = sim.configuration.N  # Number of particles
@@ -63,7 +66,7 @@ rho = N / V  # Density
 
 # Extract potential energy (U), virial (W), and kinetic energy (K)
 # We use first_block=1 to skip the initial "equilibration" block.
-U, W, K = gp.extract_scalars(sim.output, ['U', 'W', 'K'], first_block=1)
+U, W, K = gp.ScalarSaver.extract(sim.output, ['U', 'W', 'K'], per_particle=False, first_block=1)
 
 # Print mean values
 print(f"Mean potential energy per particle: {np.mean(U) / N}")
@@ -76,9 +79,10 @@ print(f"Mean kinetic energy per particle: {np.mean(K) / N}")
 ########################
 
 # Time
-dt = sim.integrator.dt
-time = np.arange(len(U)) * dt * sim.output['scalars'].attrs["steps_between_output"]
-print(f"Total time of analysed trajectory: {time[-1]}")
+#dt = sim.integrator.dt
+#time = np.arange(len(U)) * dt * sim.output['scalars'].attrs["steps_between_output"]
+times = gp.ScalarSaver.get_times(sim.output, first_block=1)
+print(f"Total time of analysed trajectory: {times[-1]}")
 
 # Compute kinetic temperature
 D = sim.configuration.D  # dimension of space
@@ -97,13 +101,13 @@ print(f"Mean pressure: {np.mean(P)}")
 
 # Plot potential energy per particle
 plt.figure()
-plt.plot(time, U / N, label='Potential energy')
+plt.plot(times, U / N, label='Potential energy')
 plt.axhline(np.mean(U) / N, color='k', linestyle='--', label='Mean')
 plt.xlabel('Time')
 plt.ylabel('Potential energy')
 plt.legend()
 if __name__ == "__main__":
-    plt.show()
+    plt.show(block=False)
 
 
 ########################################
@@ -142,6 +146,6 @@ plt.ylim(0, None)
 plt.xlabel('Number of blocks')
 plt.ylabel('Estimated error (95% confidence interval)')
 if __name__ == "__main__":
-    plt.show()
+    plt.show(block=True)
 
 print(f'Potential energy per particle {np.mean(U) / N:.4f} ± {error:.4f} (95% confidence interval)')
