@@ -1,6 +1,6 @@
 "Return a sim object of the single component LJ crystal in the NVT ensemble."
 
-def get_default_sim():
+def get_default_sim(num_timeblocks=8):
     """ Return a sim object of the single component LJ crystal in the NVT ensemble.
     The purpose of this function is to provide a default simulation for testing and simplifying examples.
 
@@ -33,11 +33,12 @@ def get_default_sim():
     # Setup runtime actions, i.e. actions performed during simulation of timeblocks
     runtime_actions = [gp.TrajectorySaver(), 
                    gp.ScalarSaver(), 
+                   gp.RestartSaver(),
                    gp.MomentumReset(100)]
 
 
     # Setup Simulation
     sim = gp.Simulation(configuration, pair_pot, integrator, runtime_actions, 
-                        num_timeblocks=8, steps_per_timeblock=1024,
+                        num_timeblocks=num_timeblocks, steps_per_timeblock=1024,
                         storage='memory')
     return sim

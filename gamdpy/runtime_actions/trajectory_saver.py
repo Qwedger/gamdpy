@@ -1,6 +1,7 @@
 import numpy as np
 import numba
 import json
+import h5py
 from numba import cuda, config
 
 from .runtime_action import RuntimeAction
@@ -45,6 +46,8 @@ class TrajectorySaver(RuntimeAction):
     def __init__(self, scheduler=Log2(), include_simbox=False,
             compression="gzip", compression_opts=4,
             saving_list=['positions', 'images'],
+            update_ptype = False,
+            update_topology = False,
             verbose=False) -> None:
         
         self.scheduler = scheduler
@@ -58,6 +61,8 @@ class TrajectorySaver(RuntimeAction):
             if item not in list(self.datatypes.keys()):
                 raise ValueError(f"{item} is not recognized. Accepted values are 'positions', 'images', 'velocities', 'forces'.")
         self.saving_list = saving_list
+        self.update_ptype = update_ptype
+        self.update_topology = update_topology
         if self.compression == 'gzip':
             self.compression_opts = compression_opts
         else:
@@ -102,6 +107,7 @@ class TrajectorySaver(RuntimeAction):
         if 'trajectory' in output.keys():
             del output['trajectory']
         output.create_group('trajectory')
+        output.create_group('trajectory/topologies')
 
         # Compression has a different syntax depending if is gzip or not because gzip can have also a compression_opts
         # it is possible to use compression=None for not compressing the data
@@ -118,12 +124,34 @@ class TrajectorySaver(RuntimeAction):
                     shape=(self.num_timeblocks, self.conf_per_block, self.configuration.N, self.configuration.D),
                     chunks=(1, 1, self.configuration.N, self.configuration.D),
                     dtype=self.datatypes[f'{key}'], compression=self.compression, compression_opts=self.compression_opts)
+        # ptype is a Virtual dataset: https://docs.h5py.org/en/stable/vds.html
+        if self.update_ptype == False:
+            layout = h5py.VirtualLayout(shape=(self.num_timeblocks, self.conf_per_block, self.configuration.N), dtype=np.int32)
+            for block in range(self.num_timeblocks):
+                for conf in range(self.conf_per_block):
+                    layout[block, conf] = h5py.VirtualSource(output['initial_configuration/ptype'])
+            output.create_virtual_dataset('trajectory/ptypes', layout, fillvalue=0)
+        else:
+            # LC: Need to implement how to save them per step (similar to what done with positions etc)
+            print(f"update_ptype = True is not implemented")
+            exit()
+        if self.update_topology == False:
+            for block in range(self.num_timeblocks):
+                # LC: names should be adjusted
+                output[f'trajectory/topologies/block{block:04d}'] = h5py.SoftLink('/initial_configuration/topology')
+        else:
+            # LC: Need to implement how to save them per step
+            print(f"update_topology = True is not implemented")
+            exit()
+
 
         output['trajectory'].attrs['compression_info'] = f"{self.compression} with opts {self.compression_opts}"
         output['trajectory'].attrs['scheduler'] = self.scheduler.__class__.__name__
         output['trajectory'].attrs['scheduler_info'] = json.dumps(self.scheduler.kwargs)
         output['trajectory'].attrs['num_timeblocks'] = self.num_timeblocks
         output['trajectory'].attrs['steps_per_timeblock'] = self.steps_per_timeblock
+        output['trajectory'].attrs['update_ptype'] = self.update_ptype
+        output['trajectory'].attrs['update_topology'] = self.update_topology
         # output['trajectory_saver'].create_dataset('steps', data=self.scheduler.steps)
 
         #output.attrs['vectors_names'] = list(self.sid.keys())
@@ -175,6 +203,7 @@ class TrajectorySaver(RuntimeAction):
         #output_reference['trajectory_saver/positions'][timeblock], output_reference['trajectory_saver/images'][timeblock] = data[:, 0], data[:, 1]
         for key in self.saving_list:
             output_reference[f'trajectory/{key}'][timeblock] = data[:,self.saving_list.index(key)]
+
         #output['trajectory_saver'][block, :] = self.d_conf_array.copy_to_host()
         if self.include_simbox:
             output_reference['trajectory/sim_box'][timeblock, :] = self.d_sim_box_output_array.copy_to_host()

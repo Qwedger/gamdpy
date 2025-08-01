@@ -89,7 +89,7 @@ u_mins = np.zeros(( num_configurations, num_timeblocks))
 
 quench_filename = filename[:-3]+'_quench.h5'
 with h5py.File(quench_filename, "w") as f:
-    configuration1.save(f, group_name="initial_configuration", mode="w", include_topology=True)
+    configuration1.save(f, group_name="initial_configuration", mode="w")
     f.attrs['dt'] = output.attrs['dt']
     
     f.create_dataset('trajectory/positions',

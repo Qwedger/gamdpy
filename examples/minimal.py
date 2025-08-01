@@ -39,8 +39,8 @@ print(sim.summary())
 # Print current status of configuration
 print(configuration)
 
-print('\nAnalyse the saved simulation with scripts found in "examples")')
-print('(visualize requires that ovito is installed)):')
+print('\nAnalyse the saved simulation with scripts found in "examples"')
+print('(visualize requires that ovito is installed):')
 print('   python3 analyze_structure.py LJ_T0.70')
 print('   python3 analyze_dynamics.py LJ_T0.70')
 print('   python3 analyze_thermodynamics.py LJ_T0.70')

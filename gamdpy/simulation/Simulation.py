@@ -117,7 +117,8 @@ class Simulation():
                 self.memory.attrs['script_content'] = script_content
 
         # Saving initial configuration
-        self.configuration.save(output=self.memory, group_name="initial_configuration", mode="w", include_topology=True)
+        self.configuration.save(output=self.memory, group_name="initial_configuration", mode="w",
+                update_ptype=True, update_topology=True)
         
         self.runtime_actions = runtime_actions
 

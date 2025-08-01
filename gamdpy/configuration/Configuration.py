@@ -446,7 +446,7 @@ class Configuration:
         self.simbox.scale(scale_factor)
 
     def save(self, output: h5py.File, group_name: str, mode: str="w", 
-             include_topology: bool=False, verbose: bool=True) -> None:
+            update_ptype: bool=True, update_topology: bool=True, verbose: bool=True) -> None:
         """ Write a configuration to a HDF5 file
     
         Parameters
@@ -523,8 +523,14 @@ class Configuration:
         output[group_name].create_dataset('vectors', data=self.vectors.array, dtype=np.float32)
         output[f"{group_name}/vectors"].attrs['vector_columns'] = self.vector_columns
 
+        # For ptype decide to save new array every time or link to the one in initial_configuration
+        if update_ptype:
+            output[group_name].create_dataset('ptype', data=self.ptype, dtype=np.int32)
+        else:
+            layout = h5py.VirtualLayout(shape=(1,self.N), dtype=np.int32)
+            layout[0] = h5py.VirtualSource(output['/initial_configuration/ptype'])
+            output.create_virtual_dataset(f'{group_name}/ptype', layout, fillvalue=0)
         # Saving other things
-        output[group_name].create_dataset('ptype', data=self.ptype, dtype=np.int32)
         #output[group_name].create_dataset('m', data=self['m'], dtype=np.float32) # included in scalars
         output[group_name].create_dataset('r_im', data=self.r_im, dtype=np.int32)
         output[group_name].create_dataset('scalars', data=self.scalars, dtype=np.float32)
@@ -535,10 +541,12 @@ class Configuration:
         #output[group_name].attrs['simbox_data'] = self.simbox.get_lengths()
         output[group_name].attrs['simbox_data'] = self.simbox.data_array
 
-        # save topology, depending on flag
-        if include_topology:
+        # For topology decide to save new array every time or link to the one in initial_configuration
+        if update_topology:
             output[group_name].create_group('topology')
             self.topology.save(output[f'{group_name}/topology'])
+        else:
+            output[f'{group_name}/topology'] = h5py.SoftLink('/initial_configuration/topology')
 
     # The following is equivalent to overloading in c++ : https://stackoverflow.com/questions/12179271/meaning-of-classmethod-and-staticmethod-for-beginner
     # cls stands for class, in this case the Configuration class
