@@ -2,6 +2,7 @@ import numpy as np
 import numba
 import math
 from numba import cuda, config
+import json
 
 from .runtime_action import RuntimeAction
 
@@ -47,10 +48,12 @@ class StressSaver(RuntimeAction):
         shape = (self.num_timeblocks, self.stress_saves_per_block, D, D)
         if 'stresses' in output.keys():
             del output['stresses']
-        grp = output.create_group('stresses')
+        output.create_group('stresses')
         output.create_dataset('stresses/stress_tensor', shape=shape,
                 chunks=(1, self.stress_saves_per_block, D, D), dtype=np.float32)
-        grp.attrs['steps_between_output'] = self.steps_between_output
+        output['stresses'].attrs['scheduler'] = 'Lin' #self.scheduler.__class__.__name__
+        output['stresses'].attrs['scheduler_info'] = json.dumps({'Dt':self.steps_between_output}) #json.dumps(self.scheduler.kwargs)
+        output['stresses'].attrs['steps_between_output'] = self.steps_between_output # LC: This should be removed because it's above already
 
         flag = config.CUDA_LOW_OCCUPANCY_WARNINGS
         config.CUDA_LOW_OCCUPANCY_WARNINGS = False

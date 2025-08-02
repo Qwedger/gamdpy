@@ -152,7 +152,7 @@ class TrajectorySaver(RuntimeAction):
         output['trajectory'].attrs['steps_per_timeblock'] = self.steps_per_timeblock
         output['trajectory'].attrs['update_ptype'] = self.update_ptype
         output['trajectory'].attrs['update_topology'] = self.update_topology
-        # output['trajectory_saver'].create_dataset('steps', data=self.scheduler.steps)
+        output['trajectory'].create_dataset('steps', data=self.scheduler.steps, dtype=np.int32)
 
         #output.attrs['vectors_names'] = list(self.sid.keys())
         if self.include_simbox:

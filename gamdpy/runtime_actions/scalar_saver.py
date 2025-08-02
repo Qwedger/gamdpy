@@ -2,6 +2,7 @@ import numpy as np
 import numba
 import math
 from numba import cuda, config
+import json
 import h5py
 
 from .runtime_action import RuntimeAction
@@ -78,8 +79,9 @@ class ScalarSaver(RuntimeAction):
                 chunks=(1, self.scalar_saves_per_block, self.num_scalars),
                 dtype=np.float32, compression=self.compression, compression_opts=self.compression_opts)
         output['scalars'].attrs['compression_info'] = f"{self.compression} with opts {self.compression_opts}"
-
-        output['scalars'].attrs['steps_between_output'] = self.steps_between_output
+        output['scalars'].attrs['scheduler'] = 'Lin' #self.scheduler.__class__.__name__
+        output['scalars'].attrs['scheduler_info'] = json.dumps({'Dt':self.steps_between_output}) #json.dumps(self.scheduler.kwargs)
+        output['scalars'].attrs['steps_between_output'] = self.steps_between_output # LC: This should be removed because it's above already
         output['scalars'].attrs['scalar_names'] = list(self.sid.keys())
 
         flag = config.CUDA_LOW_OCCUPANCY_WARNINGS
