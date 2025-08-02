@@ -43,6 +43,7 @@ def print_h5_structure(node, indent=0):
             vectors  (Dataset, shape=(3, 2048, 3), dtype=float32)
     scalars/ (Group)
         scalars  (Dataset, shape=(2, 64, 3), dtype=float32)
+        steps  (Dataset, shape=(65,), dtype=int32)
     trajectory/ (Group)
         images  (Dataset, shape=(2, 12, 2048, 3), dtype=int32)
         positions  (Dataset, shape=(2, 12, 2048, 3), dtype=float32)
@@ -119,7 +120,7 @@ def print_h5_attributes(obj, path="/"):
         - compression_info: gzip with opts 4
         - scalar_names: ['U' 'W' 'K']
         - scheduler: Lin
-        - scheduler_info: {"Dt": 16}
+        - scheduler_info: {"steps_between": 16, "npoints": null}
         - steps_between_output: 16
     Attributes at /trajectory/:
         - compression_info: gzip with opts 4

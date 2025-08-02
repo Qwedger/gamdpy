@@ -5,6 +5,7 @@ from numba import cuda, config
 import json
 
 from .runtime_action import RuntimeAction
+from .time_scheduler import Lin
 
 
 class StressSaver(RuntimeAction):
@@ -14,6 +15,10 @@ class StressSaver(RuntimeAction):
     def __init__(self, steps_between_output:int = 16, compute_flags = None, verbose=False) -> None:
         if type(steps_between_output) != int or steps_between_output < 0:
             raise ValueError(f'steps_between_output ({steps_between_output}) should be non-negative integer.')
+
+        # For now only to put the scheduler information in the h5 file
+        self.scheduler = Lin(steps_between=steps_between_output)
+
         self.steps_between_output = steps_between_output
         self.compute_flags = compute_flags
         self.verbose = verbose
@@ -51,10 +56,19 @@ class StressSaver(RuntimeAction):
         output.create_group('stresses')
         output.create_dataset('stresses/stress_tensor', shape=shape,
                 chunks=(1, self.stress_saves_per_block, D, D), dtype=np.float32)
-        output['stresses'].attrs['scheduler'] = 'Lin' #self.scheduler.__class__.__name__
-        output['stresses'].attrs['scheduler_info'] = json.dumps({'Dt':self.steps_between_output}) #json.dumps(self.scheduler.kwargs)
         output['stresses'].attrs['steps_between_output'] = self.steps_between_output # LC: This should be removed because it's above already
 
+        # Setup scheduler, and write the relevant information to the h5 file
+        self.scheduler.setup(stepmax=self.steps_per_timeblock, ntimeblocks=self.num_timeblocks)
+        self.scheduler.info_to_h5(output['stresses'])
+
+        #output['stresses'].attrs['scheduler'] = 'Lin' #self.scheduler.__class__.__name__        
+        #output['stresses'].attrs['scheduler'] = self.scheduler.__class__.__name__
+        #output['stresses'].attrs['scheduler_info'] = json.dumps(self.scheduler.kwargs)
+        #output['stresses'].attrs['scheduler_info'] = json.dumps({'Dt':self.steps_between_output}) #json.dumps(self.scheduler.kwargs)
+        #output['stresses'].create_dataset('steps', data=self.scheduler.steps, dtype=np.int32)
+
+        
         flag = config.CUDA_LOW_OCCUPANCY_WARNINGS
         config.CUDA_LOW_OCCUPANCY_WARNINGS = False
         self.zero_kernel = self.make_zero_kernel_3()

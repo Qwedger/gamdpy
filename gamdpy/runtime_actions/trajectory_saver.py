@@ -144,15 +144,14 @@ class TrajectorySaver(RuntimeAction):
             print(f"update_topology = True is not implemented")
             exit()
 
-
         output['trajectory'].attrs['compression_info'] = f"{self.compression} with opts {self.compression_opts}"
-        output['trajectory'].attrs['scheduler'] = self.scheduler.__class__.__name__
-        output['trajectory'].attrs['scheduler_info'] = json.dumps(self.scheduler.kwargs)
         output['trajectory'].attrs['num_timeblocks'] = self.num_timeblocks
         output['trajectory'].attrs['steps_per_timeblock'] = self.steps_per_timeblock
         output['trajectory'].attrs['update_ptype'] = self.update_ptype
         output['trajectory'].attrs['update_topology'] = self.update_topology
-        output['trajectory'].create_dataset('steps', data=self.scheduler.steps, dtype=np.int32)
+        
+        # Scheduler info
+        self.scheduler.info_to_h5(output['trajectory'])
 
         #output.attrs['vectors_names'] = list(self.sid.keys())
         if self.include_simbox:

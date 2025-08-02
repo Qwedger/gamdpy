@@ -6,6 +6,7 @@ import json
 import h5py
 
 from .runtime_action import RuntimeAction
+from .time_scheduler import Lin
 
 class ScalarSaver(RuntimeAction):
     """
@@ -14,6 +15,9 @@ class ScalarSaver(RuntimeAction):
     """
 
     def __init__(self, steps_between_output:int = 16, compute_flags = None, verbose=False, compression="gzip", compression_opts=4) -> None:
+
+        # For now only to put the scheduler information in the h5 file
+        self.scheduler = Lin(steps_between=steps_between_output) 
 
         if type(steps_between_output) != int or steps_between_output < 0:
             raise ValueError(f'steps_between_output ({steps_between_output}) should be non-negative integer.')
@@ -79,10 +83,19 @@ class ScalarSaver(RuntimeAction):
                 chunks=(1, self.scalar_saves_per_block, self.num_scalars),
                 dtype=np.float32, compression=self.compression, compression_opts=self.compression_opts)
         output['scalars'].attrs['compression_info'] = f"{self.compression} with opts {self.compression_opts}"
-        output['scalars'].attrs['scheduler'] = 'Lin' #self.scheduler.__class__.__name__
-        output['scalars'].attrs['scheduler_info'] = json.dumps({'Dt':self.steps_between_output}) #json.dumps(self.scheduler.kwargs)
         output['scalars'].attrs['steps_between_output'] = self.steps_between_output # LC: This should be removed because it's above already
         output['scalars'].attrs['scalar_names'] = list(self.sid.keys())
+
+        # Setup scheduler, and write the relevant information to the h5 file
+        self.scheduler.setup(stepmax=self.steps_per_timeblock, ntimeblocks=self.num_timeblocks)
+        self.scheduler.info_to_h5(output['scalars'])
+        
+        # Scheduler info
+        #output['scalars'].attrs['scheduler'] = 'Lin' #self.scheduler.__class__.__name__
+        #output['scalars'].attrs['scheduler_info'] = json.dumps({'Dt':self.steps_between_output}) #json.dumps(self.scheduler.kwargs)
+        #output['scalars'].attrs['scheduler'] = self.scheduler.__class__.__name__
+        #output['scalars'].attrs['scheduler_info'] = json.dumps(self.scheduler.kwargs)
+        #output['scalars'].create_dataset('steps', data=self.scheduler.steps, dtype=np.int32)
 
         flag = config.CUDA_LOW_OCCUPANCY_WARNINGS
         config.CUDA_LOW_OCCUPANCY_WARNINGS = False

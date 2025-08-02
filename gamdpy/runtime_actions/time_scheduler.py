@@ -1,5 +1,6 @@
 import numpy as np
 import math
+import json
 
 """
 Time scheduler classes. They are used to:
@@ -61,6 +62,11 @@ class BaseScheduler():
         self.stepcheck_func = self._get_stepcheck()
         self.steps, self.indexes = self._compute_steps()
 
+    def info_to_h5(self, h5file):
+        h5file.attrs['scheduler'] = self.__class__.__name__
+        h5file.attrs['scheduler_info'] = json.dumps(self.kwargs)
+        h5file.create_dataset('steps', data=self.steps, dtype=np.int32)
+
     def get_kwargs(self):
         import inspect
         frame = inspect.currentframe()
@@ -116,6 +122,7 @@ class Log(BaseScheduler):
     # def __init__(self, base=np.exp(1.0)):
     def __init__(self, base):
         super().__init__()
+        self.kwargs = super().get_kwargs()
         self.base = base
 
     def _get_stepcheck(self):
@@ -150,8 +157,11 @@ class Lin(BaseScheduler):
 
     def __init__(self, steps_between=None, npoints=None):
         super().__init__()
+        self.kwargs = super().get_kwargs()
+        self.kwargs = {'steps_between': steps_between, 'npoints':npoints}
         self.steps_between = steps_between
         self.npoints = npoints
+        
 
     def _get_stepcheck(self):
         # this must go here because the needed super() attributes are defined in setup(), not __init__()
@@ -172,6 +182,7 @@ class Geom(BaseScheduler):
 
     def __init__(self, npoints):
         super().__init__()
+        self.kwargs = super().get_kwargs()
         self.npoints = npoints
 
     def _get_stepcheck(self):
