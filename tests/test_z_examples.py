@@ -151,7 +151,7 @@ class Test_examples:
         self.make_one("consistency_NPT")
 
     def test_brownian(self):
-        self.make_one("brownian", ["Data/brownian.py", ])
+        self.make_one("brownian", ["Data/brownian.h5", ])
 
     def test_kablj(self):
         self.make_one("kablj", ["Data/KABLJ_Rho1.200_T0.800.h5", ])
