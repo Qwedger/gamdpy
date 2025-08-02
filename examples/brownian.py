@@ -25,6 +25,7 @@ dt = 0.005
 tau = 0.1
 integrator = gp.integrators.Brownian(temperature=temperature, tau=tau, dt=dt, seed=2025)
 runtime_actions = [
+    gp.RestartSaver(),
     gp.TrajectorySaver(),
     gp.MomentumReset(steps_between_reset=100),
     gp.ScalarSaver(16, {'W' :True, 'K' :True}),
@@ -33,7 +34,7 @@ runtime_actions = [
 sim = gp.Simulation(configuration, interactios, integrator, runtime_actions,
                     num_timeblocks=8,
                     steps_per_timeblock=1024,
-                    storage='memory')
+                    storage='Data/brownian.h5')
 
 for _ in sim.run_timeblocks():
     print(sim.status(per_particle=True))

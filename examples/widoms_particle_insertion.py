@@ -43,7 +43,9 @@ sim = gp.Simulation(configuration, pair_pot, integrator, runtime_actions,
                     storage='memory')
 
 # Equilibrate the system
-sim.run()
+for block in sim.run_timeblocks():
+    print(f'{sim.status(per_particle=True)}')
+print(sim.summary())
 
 # Setup the Widom's particle insertion calculator
 num_ghost_particles = 500_000

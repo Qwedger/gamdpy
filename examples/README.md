@@ -66,7 +66,6 @@ The following examples of data analysis scripts need a filename as a commandline
 
 - [visualize.py](visualize.py) 3D visualization of saved restarts using ovito (needs to be installed). Usage: python3 visualize.py filename.h5
 - [write_to_lammps.py](write_to_lammps.py) : Write a dump file in LAMMPS format. Can be open by external tools like OVITO or VMD.
-- [calc_rdf_from_rumd3.py](calc_rdf_from_rumd3.py) : Read a simulation saved as "TrajectoryFiles" from rumd3 and calculate the RDF.
 - [minimal_cpu.py](minimal_cpu.py) : Like minimal.py but running on the cpu using numba CUDA simulator.
 - [xy_model.py](xy_model.py) : The classical XY model of rotators on a 2D square lattice
 - [rubber_cube.py](rubber_cube.py): A rubber cube modeled as particles connected by springs

@@ -61,8 +61,12 @@ relax.set_relaxation_from_types(particle_types=[1], temperature=[2.],
 
 # Set the pair interactions
 pair_func = gp.apply_shifted_potential_cutoff(gp.LJ_12_6_sigma_epsilon)
-sig = [[1.0, 1.0, 0.0], [1.0, 1.0, 0.0], [0.0, 0.0, 0.0]]
-eps = [[1.0, 1.0, 0.0], [1.0, 1.0, 0.0], [0.0, 0.0, 0.0]]
+sig = [[1.0, 1.0, 0.0], 
+       [1.0, 1.0, 0.0], 
+       [0.0, 0.0, 0.0]]
+eps = [[1.0, 1.0, 0.0], 
+       [1.0, 1.0, 0.0], 
+       [0.0, 0.0, 0.0]]
 cut = np.array(sig) * 2.5
 pair_pot = gp.PairPotential(pair_func, params=[sig, eps, cut], max_num_nbs=1000)
 
@@ -76,13 +80,14 @@ integrator = gp.integrators.NVE(dt=0.005)
 compute_plan = gp.get_default_compute_plan(configuration)
 
 # Setup runtime actions, i.e. actions performed during simulation of timeblocks
-runtime_actions = [gp.TrajectorySaver(),
+runtime_actions = [gp.RestartSaver(), 
+                   gp.TrajectorySaver(),
                    gp.ScalarSaver()]
 
 # Setup Simulation. Total number of time steps: num_blocks * steps_per_block
 sim = gp.Simulation(configuration, [pair_pot, tether, grav, relax], integrator, runtime_actions,
                     num_timeblocks=100, steps_per_timeblock=64,
-                    storage='memory', compute_plan=compute_plan)
+                    storage='Data/poiseuille.h5', compute_plan=compute_plan)
 
 prof = gp.CalculatorHydrodynamicProfile(configuration, 0)
 

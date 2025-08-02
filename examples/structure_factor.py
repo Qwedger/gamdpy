@@ -29,7 +29,9 @@ sim = gp.Simulation(configuration, pair_potential, integrator, runtime_actions,
                     storage='memory')
 
 print("Equilibration run")
-sim.run()
+for block in sim.run_timeblocks():
+    print(f'{sim.status(per_particle=True)}')
+print(sim.summary())
 
 print("Production run")
 q_max = 18.0

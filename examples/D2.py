@@ -19,7 +19,8 @@ pair_pot = gp.PairPotential(pair_func, params=[sig, eps, cut], max_num_nbs=1000)
 integrator = gp.integrators.NVT(temperature=0.7, tau=0.2, dt=0.005)
 
 # Setup runtime actions, i.e. actions performed during simulation of timeblocks
-runtime_actions = [gp.TrajectorySaver(),
+runtime_actions = [gp.RestartSaver(),
+                   gp.TrajectorySaver(),
                    gp.ScalarSaver(),
                    gp.MomentumReset(100)]
 
@@ -27,13 +28,15 @@ runtime_actions = [gp.TrajectorySaver(),
 # Setup Simulation.
 sim = gp.Simulation(configuration, pair_pot, integrator, runtime_actions,
                     num_timeblocks=32, steps_per_timeblock=32*1024, 
-                    storage='memory')
+                    storage='Data/D2.h5')
 
 # Plot initial configuration
 plt.figure()
 
 # Run simulation
-sim.run()
+for block in sim.run_timeblocks():
+    print(f'{sim.status(per_particle=True)}')
+print(sim.summary())
 
 # Plot final configuration and box
 plt.plot(configuration['r'][:, 0], configuration['r'][:, 1], 'o',

@@ -29,7 +29,7 @@ runtime_actions = [gp.TrajectorySaver(),
 # Setup Simulation. 
 sim = gp.Simulation(configuration, [pair_pot], integrator, runtime_actions,
                     num_timeblocks=32, steps_per_timeblock=1*1024,
-                    storage='LJ_T0.70.h5')
+                    storage='Data/LJ_NVU_T0.70.h5')
 
 # Run simulation
 for timeblock in sim.run_timeblocks():
@@ -39,6 +39,3 @@ print(sim.summary())
 # Print current status of configuration
 print(configuration)
 
-# Do analysis from the commandline (like computing MSD) with something like,
-#    python -m gamdpy.tools.calc_dynamics -f 4 -o msd.pdf LJ_T*.h5
-# or with a Python script. See examples.

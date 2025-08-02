@@ -58,7 +58,8 @@ print(sim.summary())
 print('Production:')
 integrator = gp.integrators.NVT(temperature=temperature, tau=0.2, dt=dt)
 
-runtime_actions = [gp.MomentumReset(100), 
+runtime_actions = [gp.RestartSaver(),
+                   gp.MomentumReset(100), 
                    gp.TrajectorySaver(), 
                    gp.ScalarSaver(32, {'Fsq':True, 'lapU':True, 'Ptot':True}), ]
 

@@ -37,7 +37,9 @@ sim = gp.Simulation(configuration, pair_pot, integrator, runtime_actions,
                     storage='LJ_T0.70.h5', timing=False)
 
 # Run simulation
-sim.run()
+for block in sim.run_timeblocks():
+    print(f'{sim.status(per_particle=True)}')
+print(sim.summary())
 
 # To get a plot of the MSD do something like this:
 # python -m gamdpy.tools.calc_dynamics -f 4 -o msd.pdf LJ_T*.h5

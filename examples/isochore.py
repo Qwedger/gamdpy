@@ -34,9 +34,10 @@ for temperature in ['0.70', '1.10', '1.50']:
     integrator = gp.integrators.NVT(temperature=temperature, tau=0.2, dt=0.005)
 
     # Setup runtime actions, i.e. actions performed during simulation of timeblocks
-    runtime_actions = [gp.TrajectorySaver(),
-                    gp.ScalarSaver(),
-                    gp.MomentumReset(100)]
+    runtime_actions = [gp.RestartSaver(),
+                       gp.TrajectorySaver(),
+                       gp.ScalarSaver(),
+                       gp.MomentumReset(100)]
 
     # Setup Simulation
     sim = gp.Simulation(configuration, pair_pot, integrator, runtime_actions, 

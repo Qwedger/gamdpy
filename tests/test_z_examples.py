@@ -35,15 +35,12 @@ class Test_examples:
         if rm_out:                      # remove created files
             [os.remove(filename) for filename in toremove]
 
-    #def test_analyze_structure(self): # Test does not work because reading from command-line
-    #    self.make_one("analyze_structure", ["Data/LJ_r0.973_T0.70_toread_rdf.pdf", "Data/LJ_r0.973_T0.70_toread_rdf.pkl"])
-
     # Tests are ordered try to go fast to slow
     def test_D2(self):
-        self.make_one("D2")
+        self.make_one("D2", ["Data/D2.h5", ])
 
     def test_bcc_lattice(self):
-        self.make_one("bcc_lattice")
+        self.make_one("bcc_lattice", ["Data/bcc.h5", ])
 
     #def test_blocks(self): Example removed
     #    self.make_one("blocks")
@@ -55,10 +52,10 @@ class Test_examples:
         self.make_one("minimal_NPT")
 
     def test_minimal_NVU(self):
-        self.make_one("minimal_NVU")
+        self.make_one("minimal_NVU", ["Data/LJ_NVU_T0.70.h5", ])
 
     def test_yukawa(self):
-        self.make_one("yukawa")
+        self.make_one("yukawa", ["Data/yukawa.h5", ])
 
     def test_calc_rdf_from_h5(self):
         self.make_one("calc_rdf_from_h5", ["rdf.dat", "ptype_rdf.dat"])
@@ -130,7 +127,7 @@ class Test_examples:
         self.make_one("D8")
 
     def test_poiseuille(self):
-        self.make_one("poiseuille", ["HydrodynamicProfile.dat", "initial.xyz", "final.xyz"])
+        self.make_one("poiseuille", ["HydrodynamicProfile.dat", "initial.xyz", "final.xyz", "Data/poiseuille.h5"])
 
     def test_isochore(self):
         self.make_one("isochore", ["Data/LJ_r0.973_T0.70.h5", "Data/LJ_r0.973_T1.10.h5", "Data/LJ_r0.973_T1.50.h5"])
@@ -154,10 +151,10 @@ class Test_examples:
         self.make_one("consistency_NPT")
 
     def test_brownian(self):
-        self.make_one("brownian")
+        self.make_one("brownian", ["Data/brownian.py", ])
 
     def test_kablj(self):
-        self.make_one("kablj", ["Data/KABLJ_Rho1.200_T0.800.h5"])
+        self.make_one("kablj", ["Data/KABLJ_Rho1.200_T0.800.h5", ])
 
     def test_molecules(self):
         self.make_one("molecules", ["Data/chains_compress.h5", "Data/chains.h5", "molecule.pdf"])
