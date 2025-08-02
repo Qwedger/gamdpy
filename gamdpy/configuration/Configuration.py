@@ -527,8 +527,10 @@ class Configuration:
         if update_ptype:
             output[group_name].create_dataset('ptype', data=self.ptype, dtype=np.int32)
         else:
-            layout = h5py.VirtualLayout(shape=(1,self.N), dtype=np.int32)
-            layout[0] = h5py.VirtualSource(output['/initial_configuration/ptype'])
+            #layout = h5py.VirtualLayout(shape=(1,self.N), dtype=np.int32)
+            #layout[0] = h5py.VirtualSource(output['/initial_configuration/ptype'])
+            layout = h5py.VirtualLayout(shape=(self.ptype.shape), dtype=np.int32)
+            layout[:] = h5py.VirtualSource(output['/initial_configuration/ptype'])
             output.create_virtual_dataset(f'{group_name}/ptype', layout, fillvalue=0)
         # Saving other things
         #output[group_name].create_dataset('m', data=self['m'], dtype=np.float32) # included in scalars
