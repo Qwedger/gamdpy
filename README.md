@@ -33,7 +33,8 @@ Classes implementing a simulation algorithm. Currently implemented:
 - class NPT_Atomic
 - class NPT_Langevin
 - class GradientDescent
-- class NVU_RT (Experimental)
+- class NVU : Simulating at constant potential energy
+- class NVU_RT : High dimensional ray-tracing on NVU surface (Experimental)
 
 Temperature/Pressure can be controlled by a user-supplied function, see examples/kablj.py
 
@@ -51,6 +52,7 @@ An interaction is responsible for keeping any internal datastructures up to date
 Classes implementing actions on the configuration which are not related to the interactions or the integration of the equation of motion.
 These classes include momentum reset and savers.
 - class TrajectorySaver
+- class RestartSaver
 - class ScalarSaver
 - class MomentumReset
 
