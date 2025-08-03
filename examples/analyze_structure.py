@@ -48,21 +48,22 @@ for pos in positions[nconfs-1::nconfs]:
     calc_rdf.update()
 
 rdf_data = calc_rdf.read()
+
 with open(filename+'_rdf.pkl', 'wb') as f:     
     pickle.dump(rdf_data, f)
 print(f"Wrote: {filename+'_rdf.pkl'}")
 
-num_types = rdf_data['rdf_ptype'].shape[1]
+num_types = rdf_data['rdf'].shape[1]
 plt.figure(figsize=(8, 4))
 for i in range(num_types):
     for j in range(i, num_types):
-        rdf_ij = np.mean(rdf_data['rdf_ptype'][:,i,j,:], axis=0)
-        plt.plot(rdf_data['distances'], rdf_ij, label=f'{i}-{j}')
+        plt.plot(rdf_data['distances'], rdf_data['rdf'][:,i,j], label=f'{i}-{j}')
 if num_types > 1:
     plt.legend()
 plt.title(filename)
 plt.xlabel('Distance')
 plt.ylabel('Radial Distribution Function')
+plt.grid(linestyle='--', alpha=0.5)
 plt.savefig(filename+'_rdf.pdf')
 print(f"Wrote: {filename+'_rdf.pdf'}")
 if __name__ == "__main__":

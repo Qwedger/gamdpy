@@ -9,6 +9,7 @@ import gamdpy as gp
 def test_radial_distribution():
     spatial_dimensions = 1, 2, 3, 4
     densities = 1.0, 0.32
+    number_of_types = 1
     for D, rho in product(spatial_dimensions, densities):
         # print(D, rho)
         number_of_particles = 10_000
@@ -28,9 +29,10 @@ def test_radial_distribution():
         rdf_data = calc_rdf.read()
         r = rdf_data['distances']
         assert len(r) == bins, "Problem with (D, rho) = " + str((D, rho))
-        rdfs = rdf_data['rdf']
-        # print(rdfs)
-        assert rdfs.shape == (number_of_updates, bins), "Problem with (D, rho) = " + str((D, rho))
+        rdfs = rdf_data['rdf_per_frame']
+        #print(rdfs)
+        #print(rdfs.shape)       
+        assert rdfs.shape == (bins, number_of_types, number_of_types, number_of_updates), "Problem with (D, rho) = " + str((D, rho))
         mean_rdf = np.mean(rdfs)
         assert abs(mean_rdf - 1.0) < 0.01, "Problem with (D, rho) = " + str((D, rho))
         assert abs(np.max(rdfs) - 1.0) < 0.8, "Problem with (D, rho) = " + str((D, rho))
@@ -40,6 +42,7 @@ def test_radial_distribution():
 def test_radial_distribution_lees_edwards():
     spatial_dimensions = 2, 3, 4
     densities = 1.0, 0.32
+    number_of_types = 1
     for D, rho in product(spatial_dimensions, densities):
         number_of_particles = 10_000
         conf = gp.Configuration(D=D)
@@ -61,9 +64,9 @@ def test_radial_distribution_lees_edwards():
         rdf_data = calc_rdf.read()
         r = rdf_data['distances']
         assert len(r) == bins, "Problem with (D, rho) = " + str((D, rho))
-        rdfs = rdf_data['rdf']
+        rdfs = rdf_data['rdf_per_frame']
         # print(rdfs)
-        assert rdfs.shape == (number_of_updates, bins), "Problem with (D, rho) = " + str((D, rho))
+        assert rdfs.shape == (bins, number_of_types, number_of_types, number_of_updates), "Problem with (D, rho) = " + str((D, rho))
         mean_rdf = np.mean(rdfs)
         assert abs(mean_rdf - 1.0) < 0.01, "Problem with (D, rho) = " + str((D, rho))
         assert abs(np.max(rdfs) - 1.0) < 0.8, "Problem with (D, rho) = " + str((D, rho))

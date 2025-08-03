@@ -5,6 +5,7 @@ import os
 import gamdpy as gp
 
 file_to_read = "LJ_T0.70.h5" 
+#file_to_read = "Data/KABLJ_Rho1.200_T0.400_toread.h5" 
 
 if not os.path.isfile(file_to_read):
     print("This example needs a the file LJ_T0.70.h5 to be present")

@@ -54,22 +54,18 @@ if run_NVT:
     integrator_NVT = gp.integrators.NVT(Ttarget_function, tau=0.2, dt=dt)
 
     # Setup runtime actions, i.e. actions performed during simulation of timeblocks
-    runtime_actions = [gp.TrajectorySaver(),
+    runtime_actions = [gp.RestartSaver(),
+                       gp.TrajectorySaver(),
                        gp.ScalarSaver(),
                        gp.MomentumReset(100)]
-
-
 
     # Set simulation up. Total number of timesteps: num_blocks * steps_per_block
     sim_NVT = gp.Simulation(configuration, pairpot, integrator_NVT, runtime_actions,
                             num_timeblocks=num_blocks, steps_per_timeblock=steps_per_block,
                             storage='memory')
 
-
-
     for block in sim_NVT.run_timeblocks():
-        print(block)
-        print(sim_NVT.status(per_particle=True))
+        print(block, sim_NVT.status(per_particle=True))
 
     # save both in hdf5 and rumd-3 formats
     gp.configuration_to_hdf5(configuration, conf_filename)

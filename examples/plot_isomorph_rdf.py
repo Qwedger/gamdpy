@@ -28,12 +28,12 @@ for simulation in data:
     rho = simulation['rho']
     T = simulation['T']
     distances = simulation['rdf']['distances']
-    rdf = np.mean(simulation['rdf']['rdf'], axis=0)
+    rdf_data = simulation['rdf']['rdf']
 
     # Do the actual plotting in absolute and then reduced units
-    axs[0].plot(distances, rdf,
+    axs[0].plot(distances, rdf_data[:,0,0],
                 '-', label=f'rho={rho:.3f}, T={T:.3f}')
-    axs[1].plot(distances * rho ** (1 / 3), rdf,
+    axs[1].plot(distances * rho ** (1 / 3), rdf_data[:,0,0],
                 '-', label=f'rho={rho:.3f}, T={T:.3f}')
 
 # Final touches and saving    
@@ -42,5 +42,7 @@ axs[0].set_xlim([0.5, 3.5])
 axs[1].set_xlim([0.5, 3.5])
 fig.tight_layout()
 fig.savefig('isomorph_rdf.pdf')
-#  plt.show()
+
+if __name__ == "__main__":
+    plt.show()
 

@@ -36,15 +36,15 @@ if 'analyze_saved' not in argv:
     dt = 0.004  # timestep
     num_timeblocks = 64           # Do simulation in this many 'blocks'. 
     #steps_per_timeblock = 16*8*1024  # ... each of this many steps'
-    steps_per_timeblock = 1*1024  # ... each of this many steps'
+    steps_per_timeblock = 16*1024  # ... each of this many steps'
+    #steps_per_timeblock = 1*1024  # ... each of this many steps'
 
     integrator = gp.integrators.NVT(temperature=temperature, tau=0.2, dt=dt)
 
     runtime_actions = [gp.MomentumReset(100),
                        gp.RestartSaver(),
-                    gp.TrajectorySaver(),
-                    gp.ScalarSaver() ]
-
+                       gp.TrajectorySaver(),
+                       gp.ScalarSaver() ]
 
     sim = gp.Simulation(configuration, pair_pot, integrator, runtime_actions,
                         num_timeblocks=num_timeblocks, steps_per_timeblock=steps_per_timeblock,
@@ -65,18 +65,16 @@ with h5py.File('Data/'+filename+'.h5', 'r') as output:
     dynamics = gp.tools.calc_dynamics(output, 0, qvalues=[7.25, 5.5])
     U, W = gp.ScalarSaver.extract(output, columns=['U', 'W'], first_block=0)
 
-    configuration = gp.configuration_from_hdf5_group(output, 'restarts/restart0000')
+    configuration = gp.Configuration.from_h5(output, 'restarts/restart0000')
     configuration.copy_to_device()
     calc_rdf = gp.CalculatorRadialDistribution(configuration, bins=1000)
     for block in range(64):
-        configuration2 = gp.configuration_from_hdf5_group(output, f'restarts/restart{block:04d}')
+        configuration2 =gp.Configuration.from_h5(output, f'restarts/restart{block:04d}')
         configuration['r'] = configuration2['r'] # SHOULD NOT BE NECESARRY!!!
         configuration.copy_to_device()
         calc_rdf.update()
 
 rdf = calc_rdf.read()
-rdf['distances'] += rdf['distances'][1]/2 # NOTE: distances refers to bginning of bin!!!
-
 
 #fig = plt.figure(figsize=(9, 14), layout='constrained')
 fig = plt.figure(figsize=(8, 14))
@@ -136,9 +134,9 @@ step = 4
 axs['rdf'].plot(rdf_ref[::step,0], rdf_ref[::step,1], 'k.', label='AA, ref', alpha=0.75)
 axs['rdf'].plot(rdf_ref[::step,0], rdf_ref[::step,2], 'b.', label='AB, ref', alpha=0.75)
 axs['rdf'].plot(rdf_ref[::step,0], rdf_ref[::step,4], 'r.', label='BB, ref', alpha=0.75)
-axs['rdf'].plot(rdf['distances'], np.mean(rdf['rdf_ptype'][:,0,0,:], axis=0), 'k', label='AA, rmse=xxx')
-axs['rdf'].plot(rdf['distances'], np.mean(rdf['rdf_ptype'][:,0,1,:], axis=0), 'b', label='AB, rmse=xxx')
-axs['rdf'].plot(rdf['distances'], np.mean(rdf['rdf_ptype'][:,1,1,:], axis=0), 'r', label='BB, rmse=xxx')
+axs['rdf'].plot(rdf['distances'], rdf['rdf'][:,0,0], 'k', label='AA, rmse=xxx')
+axs['rdf'].plot(rdf['distances'], rdf['rdf'][:,0,1], 'b', label='AB, rmse=xxx')
+axs['rdf'].plot(rdf['distances'], rdf['rdf'][:,1,1], 'r', label='BB, rmse=xxx')
 axs['rdf'].set_xlim([0.5, 3])
 axs['rdf'].grid(linestyle='--', alpha=0.5)
 axs['rdf'].legend()

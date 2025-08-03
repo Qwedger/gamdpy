@@ -130,9 +130,9 @@ class CalculatorRadialDistribution():
         bins = self.rdf_list[0].shape[2]
         min_box_dim = np.min(self.configuration.simbox.get_lengths())
         bin_width = (min_box_dim / 2) / bins
-        rdf_ptype = np.array(self.rdf_list)
+        rdf_per_frame = np.array(self.rdf_list)
 
-        # Normalize the g(r) lengths # Compute in setup and normalize om the fly 
+        # Normalize the g(r) with respect to shell volume 
         rho = self.configuration.N / self.configuration.simbox.get_volume()
         for i in range(bins):  # Normalize one bin/distance at a time
             r_outer = (i + 1) * bin_width
@@ -146,17 +146,25 @@ class CalculatorRadialDistribution():
                 unit_hypersphere_volume = ( 2**D * math.pi**n * math.factorial(n) ) / math.factorial(D)
             shell_volume = unit_hypersphere_volume * (r_outer**D - r_inner**D)
             expected_num = rho * shell_volume
-            rdf_ptype[:, :, :, i] /= (expected_num * self.configuration.N)
-        rdf = rdf_ptype.sum(axis=1).sum(axis=1)
+            rdf_per_frame[:, :, :, i] /= (expected_num * self.configuration.N)
+
+        # Normalize with respect to particle types, so that rdf_alpha_beta -> 1 for large distances
         ptype = self.d_ptype.copy_to_host() if self.d_ptype is not None else self.configuration.d_ptype.copy_to_host()
-        for j in range(rdf_ptype.shape[1]):
+        num_types = rdf_per_frame.shape[1]
+        assert num_types==rdf_per_frame.shape[2]
+        for j in range(num_types):
             n_j = np.sum(ptype == j) / len(ptype)
-            rdf_ptype[:, j, :, :] /= n_j
-        for k in range(rdf_ptype.shape[2]):
+            rdf_per_frame[:, j, :, :] /= n_j
+        for k in range(num_types):
             n_k = np.sum(ptype == k) / len(ptype)
-            rdf_ptype[:, :, k, :] /= n_k
-        distances = np.arange(0, bins) * bin_width
-        return {'distances': distances, 'rdf': rdf, 'rdf_ptype': rdf_ptype, "ptype": ptype}
+            rdf_per_frame[:, :, k, :] /= n_k
+        distances = (np.arange(0, bins) + .5) * bin_width # middle of bin
+
+        # swap axis from [frame, typeA, typeB, distance_index] to [distance_index, typeA, typeB, frame]
+        rdf_per_frame = np.swapaxes(rdf_per_frame, 0, 3) 
+        rdf = np.mean(rdf_per_frame, axis=3)
+
+        return {'distances': distances, 'rdf': rdf, 'rdf_per_frame': rdf_per_frame, "ptype": ptype}
 
     def save_average(self, output_filename="rdf.dat", save_ptype=False) -> None:
         """ Save the average radial distribution function to a file
@@ -173,13 +181,12 @@ class CalculatorRadialDistribution():
         """
 
         rdf_dict = self.read()
-        rdf_total = np.mean(rdf_dict['rdf'], axis=0)
         rdf_ij = []
         header_ij = " "
-        for i in range(rdf_dict["rdf_ptype"].shape[1]):
-            for j in range(rdf_dict["rdf_ptype"].shape[2]):
-                rdf_ij.append(np.mean(rdf_dict['rdf_ptype'][:, i, j, :], axis=0))
+        for i in range(rdf_dict["rdf"].shape[1]):
+            for j in range(rdf_dict["rdf"].shape[2]):
+                rdf_ij.append(rdf_dict['rdf'][:, i, j])
                 header_ij += f"g[{i}-{j}](r) "
-        np.savetxt(output_filename, np.array([rdf_dict['distances'], rdf_total, *rdf_ij]).T, header=f"r g(r) {header_ij} ptype")
+        np.savetxt(output_filename, np.array([rdf_dict['distances'], *rdf_ij]).T, header=f"r {header_ij} ptype")
         np.savetxt(f"ptype_{output_filename}", np.array(rdf_dict["ptype"]).T, header="ptype")
 
