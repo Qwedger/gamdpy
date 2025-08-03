@@ -20,7 +20,7 @@
 * examples/visualize.py for 3D visualization using ovito.
 * examples/plot_pkls.py for plotting data from several simulations.
 
-# Other
+### Other
 
 * Updates to output h5 format
 * Update the format of the dictionary returned by CalculatorRadialDistribution.read()
