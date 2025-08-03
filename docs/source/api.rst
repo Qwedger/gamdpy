@@ -214,10 +214,6 @@ The TrajectoryIO class
 IO functions
 ^^^^^^^^^^^^
 
-.. autofunction:: gamdpy.tools.save_configuration
-
-.. autofunction:: gamdpy.configuration_from_hdf5
-
 .. autofunction:: gamdpy.configuration_from_rumd3
 
 .. autofunction:: gamdpy.configuration_to_rumd3
