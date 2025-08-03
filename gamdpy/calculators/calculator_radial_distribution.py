@@ -125,7 +125,10 @@ class CalculatorRadialDistribution():
         -------
 
         dict
-            A dictionary containing the distances and the radial distribution function.
+            'distances' - numpy array with distances to the middle of the bins
+            'rdf_per_frame' - numpy array [bin_index, typeA, typeB, frame]
+            'rdf' - numpy array [bin_index, typeA, typeB], i.e. averaged over frames
+            'ptype' - numpy array with particle types
         """
         bins = self.rdf_list[0].shape[2]
         min_box_dim = np.min(self.configuration.simbox.get_lengths())
