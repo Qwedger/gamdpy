@@ -118,7 +118,7 @@ def print_h5_attributes(obj, path="/"):
         - vector_columns: ['r' 'v' 'f']
     Attributes at /scalars/:
         - compression_info: gzip with opts 4
-        - scalar_names: ['U' 'W' 'K']
+        - scalar_columns: ['U' 'W' 'K']
         - scheduler: Lin
         - scheduler_info: {"steps_between": 16, "npoints": null}
         - steps_between_output: 16
@@ -128,6 +128,7 @@ def print_h5_attributes(obj, path="/"):
         - scheduler: Log2
         - scheduler_info: {}
         - steps_per_timeblock: 1024
+        - trajectory_columns: ['r' 'img']
         - update_ptype: False
         - update_topology: False
     Attributes at /trajectory/topologies/block0000/molecules/:

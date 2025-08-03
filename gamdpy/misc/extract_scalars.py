@@ -35,10 +35,10 @@ def extract_scalars(data, column_list, first_block=0, D=3):
     # Indices hardcoded for now (see scalar_calculator above)
     column_indices = {}
     try:
-        scalar_names = data['scalars'].attrs['scalar_names']
+        scalar_names = data['scalars'].attrs['scalar_columns']
     except KeyError:
         # try the old label
-        print("Data file uses old format (meta data labelled 'scalars_names' rather than 'scalar_names'); at some point suport for this format will be removed.")
+        print("Data file uses old format (meta data labelled 'scalars_names' rather than 'scalar_columns'); at some point suport for this format will be removed.")
         scalar_names = data.attrs['scalars_names']
 
     for index, name in enumerate(scalar_names):

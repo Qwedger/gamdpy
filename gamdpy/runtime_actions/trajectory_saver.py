@@ -53,13 +53,15 @@ class TrajectorySaver(RuntimeAction):
         self.scheduler = scheduler
         self.include_simbox = include_simbox
         self.num_vectors = len(saving_list) 
-        #self.translator = {'positions' :  'r', 'velocities' : 'v', 'forces' : 'f'}
+        self.translator = {'positions' :  'r', 'images' : 'img', 'velocities' : 'v', 'forces' : 'f'}
         self.datatypes = {'positions' : np.float32, 'images': np.int32, 'velocities' : np.float32, 'forces' : np.float32}
         self.compression = compression
+        self.sid = {} # LC : this should be a list
         # check that items of saving_list are known
         for item in saving_list:
             if item not in list(self.datatypes.keys()):
                 raise ValueError(f"{item} is not recognized. Accepted values are 'positions', 'images', 'velocities', 'forces'.")
+            self.sid[self.translator[item]]=True
         self.saving_list = saving_list
         self.update_ptype = update_ptype
         self.update_topology = update_topology
@@ -147,6 +149,7 @@ class TrajectorySaver(RuntimeAction):
         output['trajectory'].attrs['compression_info'] = f"{self.compression} with opts {self.compression_opts}"
         output['trajectory'].attrs['num_timeblocks'] = self.num_timeblocks
         output['trajectory'].attrs['steps_per_timeblock'] = self.steps_per_timeblock
+        output['trajectory'].attrs['trajectory_columns'] = list(self.sid.keys())
         output['trajectory'].attrs['update_ptype'] = self.update_ptype
         output['trajectory'].attrs['update_topology'] = self.update_topology
         

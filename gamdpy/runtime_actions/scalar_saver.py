@@ -84,7 +84,7 @@ class ScalarSaver(RuntimeAction):
                 dtype=np.float32, compression=self.compression, compression_opts=self.compression_opts)
         output['scalars'].attrs['compression_info'] = f"{self.compression} with opts {self.compression_opts}"
         output['scalars'].attrs['steps_between_output'] = self.steps_between_output # LC: This should be removed because it's above already
-        output['scalars'].attrs['scalar_names'] = list(self.sid.keys())
+        output['scalars'].attrs['scalar_columns'] = list(self.sid.keys())
 
         # Setup scheduler, and write the relevant information to the h5 file
         self.scheduler.setup(stepmax=self.steps_per_timeblock, ntimeblocks=self.num_timeblocks)
@@ -274,7 +274,7 @@ class ScalarSaver(RuntimeAction):
         """
 
         h5grp = h5file['scalars']
-        str = f"\tscalar_names: {h5grp.attrs['scalar_names']}"
+        str = f"\tscalar_columns: {h5grp.attrs['scalar_columns']}"
         str += f"\n\tscalars, shape: {h5grp['scalars'].shape}, dtype: {h5grp['scalars'].dtype}"
         return str
 
@@ -292,7 +292,7 @@ class ScalarSaver(RuntimeAction):
         
         """
 
-        return list(h5file['scalars'].attrs['scalar_names'])
+        return list(h5file['scalars'].attrs['scalar_columns'])
 
     def extract(h5file: h5py.File, columns: list[str], per_particle: bool=True, 
                 first_block: int=0, last_block: int=None, subsample: int=1, function: callable=None) -> list:
@@ -332,11 +332,11 @@ class ScalarSaver(RuntimeAction):
         _, N, D = h5file['initial_configuration']['vectors'].shape
 
         h5grp = h5file['scalars']
-        scalar_names = list(h5grp.attrs['scalar_names'])
+        scalar_columns = list(h5grp.attrs['scalar_columns'])
 
         output = []
         for column in columns:
-            index = scalar_names.index(column)
+            index = scalar_columns.index(column)
             data = np.ravel(h5grp['scalars'][first_block:last_block,:,index])[::subsample]
             if per_particle:
                 data /= N
