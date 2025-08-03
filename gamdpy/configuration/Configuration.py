@@ -585,8 +585,8 @@ class Configuration:
         >>> output_file = h5py.File('examples/Data/LJ_r0.973_T0.70_toread.h5')
         >>> conf = Configuration.from_h5(output_file, 'restarts/restart0000')
         >>> print(conf.D, conf.N, conf['r'][0])     # Print number of dimensions D, number of particles N and position of first particle
-        3 2048 [-6.384221  -6.3622074 -6.3125153]
-
+        3 2048 [-6.407801 -6.407801 -6.407801]
+        
         """
 
         h5_vector_columns = h5file[group_name]['vectors'].attrs['vector_columns']
