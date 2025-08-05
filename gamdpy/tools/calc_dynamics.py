@@ -13,7 +13,7 @@ def calc_dynamics_(positions, images, ptype, simbox, block0, conf_index0, block1
     """
     init_coord = {False: 0, True: 1} [simbox_name == 'LeesEdwards']
     dR = positions[block1, conf_index1, :, init_coord:] - positions[block0, conf_index0, :, init_coord:]
-    dR += (images[block1, conf_index1, :, init_coord:] - images[block0, conf_index0, :, init_coord:]) * simbox[init_coord]
+    dR += (images[block1, conf_index1, :, init_coord:] - images[block0, conf_index0, :, init_coord:]) * simbox[init_coord:]
 
     for i in range(np.max(ptype) + 1):
         dR_type = dR[ptype == i, :]
