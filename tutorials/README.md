@@ -3,7 +3,12 @@
 If you do not have access to a nvidia GPU, you can run the tutorials in [Google Colab](https://colab.research.google.com/), which provides GPU's free of charge: 
 1) push the 'Open in Colab' button.
 2) When the notebook is open in Colab, choose a runtime type with GPU before running ( under "Runtime" / "Change runtime type").
-3) Insert and run a notebook cell with the following code:
+3) Insert and run a notebook cell with the following code, for the current stable version:
+
+```sh
+!pip -q install gamdpy
+```
+... or this code, for the latest development version from github:
 
 ```sh
 !pip -q install git+https://github.com/ThomasBechSchroeder/gamdpy.git

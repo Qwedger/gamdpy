@@ -1,16 +1,29 @@
 # Change log for `gamdpy`
 
-## New in current version
+## Version 0.8.2, Aug 3, 2025
+
+### Bug fixes
+
+* Incorrect application of shifted-force cutoff solved
 
 ### New features
+
 * Integrator for Brownian dynamics.
 * Integrator for gradient descent.
 * Integrator for NVU dynamics.
 * Variable strain rate for SLLOD
-* calc_dynamics can handle Lees-Edwards boundary conditions
+* calc_dynamics can handle Lees-Edwards boundary conditions.
 * Tabulated pair potentials.
+* extract_scalars superseesed by ScalarSaver.extract(), see examples/read_scalar_data_from_h5.py
+* TrajectorySaver enhanced to allow saving of velocities and forces.
+* TimeScheduler's implemented to control when output is done (for now only in TrajectorySaver).
+* examples/visualize.py for 3D visualization using ovito.
+* examples/plot_pkls.py for plotting data from several simulations.
 
-### Bug fixes
-* Incorrect application of shifted-force cutoff
-## Version 0.8.1
-First release of the package.
+### Other
+
+* Updates to output h5 format
+* Update the format of the dictionary returned by CalculatorRadialDistribution.read()
+  
+## Version 0.8.1, Jun 12, 2025
+First release of the package on pypi.
