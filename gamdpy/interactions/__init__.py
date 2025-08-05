@@ -7,6 +7,7 @@ from .nblist_linked_lists import NbListLinkedLists
 
 # Pair potential
 from .pair_potential import PairPotential
+from .pair_potential_nsquared import PairPotentialNsquared
 from .tabulated_pair_potential import TabulatedPairPotential
 
 # Fixed interactions
