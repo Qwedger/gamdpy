@@ -10,7 +10,7 @@ def make_LJ_m_n(m: float, n: float) -> callable:
 
     .. math::
 
-            u(r) = A_m r^{-m} - A_n r^{-n}
+            u(r) = A_m r^{-m} + A_n r^{-n}
 
     Returns
     -------
