@@ -34,7 +34,7 @@ def test_gradient_descent(verbose=False):
     integrator = gp.integrators.GradientDescent(dt=0.00001) # v = -f*dt
 
     # Setup runtime actions, i.e., actions performed during simulation of timeblocks
-    runtime_actions = [gp.ScalarSaver(compute_flags={'lapU':True}), ]
+    runtime_actions = [gp.ScalarSaver(16, compute_flags={'lapU':True}), ]
 
     # Setup Simulation. 
     sim = gp.Simulation(configuration, [pair_pot,], integrator, runtime_actions,

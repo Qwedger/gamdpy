@@ -52,7 +52,7 @@ integrator = gp.integrators.NVT_Langevin(temperature=0.4, alpha=0.4, dt=0.01, se
 
 # Setup runtime actions
 runtime_actions = [gp.TrajectorySaver(),
-                   gp.ScalarSaver(),
+                   gp.ScalarSaver(16),
                    gp.MomentumReset(100)]
 
 # Compute plan

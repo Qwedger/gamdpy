@@ -24,7 +24,7 @@ def test_TrajectoryIO():
 
     # Setup runtime actions, i.e. actions performed during simulation of timeblocks
     runtime_actions = [gp.TrajectorySaver(), 
-                   gp.ScalarSaver(), 
+                   gp.ScalarSaver(16), 
                    gp.MomentumReset(100)]
 
     # Setup Simulation      # Note: useless reducing steps_per_timeblock, the time is spent by the jit not by the run

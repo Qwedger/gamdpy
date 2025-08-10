@@ -66,7 +66,7 @@ compute_plan = gp.get_default_compute_plan(configuration)
 
 # Setup runtime actions, i.e. actions performed during simulation of timeblocks
 runtime_actions = [gp.TrajectorySaver(),
-                   gp.ScalarSaver(),
+                   gp.ScalarSaver(16),
                    gp.MomentumReset(100)]
 
 # Setup simulation

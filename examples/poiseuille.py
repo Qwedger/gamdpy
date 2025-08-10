@@ -82,7 +82,7 @@ compute_plan = gp.get_default_compute_plan(configuration)
 # Setup runtime actions, i.e. actions performed during simulation of timeblocks
 runtime_actions = [gp.RestartSaver(), 
                    gp.TrajectorySaver(),
-                   gp.ScalarSaver()]
+                   gp.ScalarSaver(16)]
 
 # Setup Simulation. Total number of time steps: num_blocks * steps_per_block
 sim = gp.Simulation(configuration, [pair_pot, tether, grav, relax], integrator, runtime_actions,

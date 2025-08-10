@@ -24,7 +24,7 @@ def test_structure_factor():
     integrator = gp.integrators.NVT(temperature=temperature, tau=0.2, dt=0.005)
 
     runtime_actions = [ gp.TrajectorySaver(),
-                        gp.ScalarSaver(), 
+                        gp.ScalarSaver(16), 
                         gp.MomentumReset(100)]
 
     sim = gp.Simulation(configuration, pair_potential, integrator, runtime_actions,

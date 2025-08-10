@@ -36,7 +36,7 @@ for temperature in ['0.70', '1.10', '1.50']:
     # Setup runtime actions, i.e. actions performed during simulation of timeblocks
     runtime_actions = [gp.RestartSaver(),
                        gp.TrajectorySaver(),
-                       gp.ScalarSaver(),
+                       gp.ScalarSaver(16),
                        gp.MomentumReset(100)]
 
     # Setup Simulation

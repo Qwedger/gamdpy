@@ -14,7 +14,7 @@ class ScalarSaver(RuntimeAction):
     every `steps_between_output` time steps.
     """
 
-    def __init__(self, steps_between_output:int = 16, compute_flags = None, verbose=False, compression="gzip", compression_opts=4) -> None:
+    def __init__(self, steps_between_output:int = 0, compute_flags = None, verbose=False, compression="gzip", compression_opts=4) -> None:
 
         # For now only to put the scheduler information in the h5 file
         self.scheduler = Lin(steps_between=steps_between_output) 

@@ -22,7 +22,7 @@ integrator = gp.integrators.NVU(U_0 = -6.251, dl = 0.03)
 
 # Setup runtime actions, i.e., actions performed during simulation of timeblocks
 runtime_actions = [gp.TrajectorySaver(),
-                   gp.ScalarSaver(),
+                   gp.ScalarSaver(16),
                    gp.RestartSaver(),
                    gp.MomentumReset(100)]
 

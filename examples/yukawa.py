@@ -128,7 +128,7 @@ integrator = gp.integrators.NVE(dt=0.005)
 runtime_actions = [gp.RestartSaver(),
                    gp.MomentumReset(100),
                    gp.TrajectorySaver(),
-                   gp.ScalarSaver(), ]
+                   gp.ScalarSaver(16), ]
 
 # Setup Simulation.
 sim = gp.Simulation(configuration, pair_pot, integrator, runtime_actions,

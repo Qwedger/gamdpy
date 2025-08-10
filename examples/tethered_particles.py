@@ -54,7 +54,7 @@ integrator = gp.integrators.NVT(temperature=2.0, tau=0.2, dt=0.005)
 
 # Setup runtime actions, i.e. actions performed during simulation of timeblocks
 runtime_actions = [gp.TrajectorySaver(),
-                   gp.ScalarSaver()]
+                   gp.ScalarSaver(16)]
 
 # Setup Simulation. Total number of time steps: num_blocks * steps_per_block
 sim = gp.Simulation(configuration, [pair_pot, tether], integrator, runtime_actions,

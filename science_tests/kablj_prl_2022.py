@@ -44,7 +44,7 @@ if 'analyze_saved' not in argv:
     runtime_actions = [gp.MomentumReset(100),
                        gp.RestartSaver(),
                        gp.TrajectorySaver(),
-                       gp.ScalarSaver() ]
+                       gp.ScalarSaver(16) ]
 
     sim = gp.Simulation(configuration, pair_pot, integrator, runtime_actions,
                         num_timeblocks=num_timeblocks, steps_per_timeblock=steps_per_timeblock,

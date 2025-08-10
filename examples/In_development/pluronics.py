@@ -83,7 +83,7 @@ integrator = gp.integrators.NVT_Langevin(temperature=temperature, alpha=0.1, dt=
 
 # Setup runtime actions, i.e. actions performed during simulation of timeblocks
 runtime_actions = [gp.TrajectorySaver(),
-                   gp.ScalarSaver(),
+                   gp.ScalarSaver(16),
                    gp.MomentumReset(100)]
 
 # Setup simulation
