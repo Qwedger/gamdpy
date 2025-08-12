@@ -65,7 +65,7 @@ def calc_dynamics(trajectory, first_block, qvalues=7.5, overlap_distances=0.3):
     >>> import gamdpy as gp
     >>> sim = gp.get_default_sim()  # Replace with your simulation object
     >>> for block in sim.run_timeblocks(): pass
-    >>> dynamics = gp.calc_dynamics(sim.output, first_block=0, qvalues=7.5)
+    >>> dynamics = gp.calc_dynamics(sim.output, first_block=0, qvalues=7.25, overlap_distances=0.3)
     >>> dynamics.keys()
     dict_keys(['times', 'msd', 'alpha2', 'qvalues', 'Fs', 'overlap_distances', 'Qs', 'count'])
 
@@ -80,11 +80,11 @@ def calc_dynamics(trajectory, first_block, qvalues=7.5, overlap_distances=0.3):
     
     if isinstance(qvalues, float):
         qvalues = np.ones(num_types)*qvalues
-    print('Calculating Fs using q-values:', qvalues)
+    #print('Calculating Fs using q-values:', qvalues)
 
     if isinstance(overlap_distances, float):
         overlap_distances = np.ones(num_types)*overlap_distances
-    print('Calculating Qs using overlap_distances:', overlap_distances)
+    #print('Calculating Qs using overlap_distances:', overlap_distances)
         
     num_blocks, conf_per_block, N, D = trajectory['trajectory/positions'].shape
     blocks = trajectory['trajectory/positions']  # If picking out dataset in inner loop: Very slow!
