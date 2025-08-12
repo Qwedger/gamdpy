@@ -20,3 +20,4 @@ from .make_potential_function_from_sympy import make_potential_function_from_sym
 from .apply_shifted_force_cutoff import apply_shifted_force_cutoff
 from .apply_shifted_potential_cutoff import apply_shifted_potential_cutoff
 from .add_potential_functions import add_potential_functions
+from .apply_cubic_spline_cutoff import apply_cubic_spline_cutoff
