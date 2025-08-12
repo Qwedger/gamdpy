@@ -31,21 +31,21 @@ def apply_cubic_spline_cutoff(pair_potential):
 
 
         u_bare, s_bare, umm_bare = pair_pot(dist, params)
-
-
-
-        #u_cut_outer, s_cut_outer, umm_cut_outer = pair_pot(cut_outer, params)
         u_cut_inner, s_cut_inner, umm_cut_inner = pair_pot(cut_inner, params)
+
+        two = numba.float32(2.0)
+        three = numba.float32(3.0)
+        four = numba.float32(4.0)
 
         C1, C2, C3, C4 = (s_cut_inner*cut_inner,
                           -umm_cut_inner,
-                             (-3*s_cut_inner*cut_inner + 2*umm_cut_inner * Delta_r) / Delta_r**2,
-                             (2*s_cut_inner*cut_inner - umm_cut_inner*Delta_r)/Delta_r**3)
+                             (-three*s_cut_inner*cut_inner + two*umm_cut_inner * Delta_r) / Delta_r**2,
+                             (two*s_cut_inner*cut_inner - umm_cut_inner*Delta_r)/Delta_r**3)
         # for the potential, we integrate, and include a constant C0 whose value is such that the potential is zero at the outer cutoff
-        C0 = - (C1*Delta_r + C2*Delta_r**2/2 + C3*Delta_r**3/3 + C4*Delta_r**4/4)
+        C0 = - (C1*Delta_r + C2*Delta_r**2/two + C3*Delta_r**3/three + C4*Delta_r**4/four)
         # And now we have to shift the LJ potential inside the inner cutoff to match the potential at that point
         K = -C0 - u_cut_inner
-    
+
 
         if dist < cut_inner:
             s = s_bare
@@ -53,9 +53,9 @@ def apply_cubic_spline_cutoff(pair_potential):
             umm = umm_bare
         else:
             delta_r = dist - cut_inner
-            u = - (C0 + C1*delta_r + C2*delta_r**2/2 + C3*delta_r**3/3 + C4*delta_r**4/4)
+            u = - (C0 + C1*delta_r + C2*delta_r**2/two + C3*delta_r**3/three + C4*delta_r**4/four)
             s = (C1 + C2*delta_r + C3*delta_r**2 + C4*delta_r**3)/dist
-            umm = - (C2 + 2*C3*delta_r + 3*C4*delta_r**2)
+            umm = - (C2 + two*C3*delta_r + three*C4*delta_r**2)
 
 
         return u, s, umm
