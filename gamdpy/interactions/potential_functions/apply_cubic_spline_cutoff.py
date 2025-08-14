@@ -4,9 +4,14 @@ def apply_cubic_spline_cutoff(pair_potential):
     # Cut-off by computing potential twice, avoiding changes to params
     """ Apply cubic spline cutoff to a pair-potential function
 
-   
+    Actually the cubic spline is applied to the pair force as done by LAMMPS
+    (see https://docs.lammps.org/pair_lj_smooth.html).
+     The potential energy is given by a quartic function in the transition region.It is shifted
+     in each region to ensure its continuity at the inner and outer cutoffs.
 
-    Note: calls original potential function  twice, avoiding changes to params
+    Note: calls original potential function  twice each time, avoiding changes to params.
+    The four coefficients of the spline are also computed each time, along with the two energy
+    shift constants, which results in a small but noticeable performance cost.
 
     Parameters
     ----------
@@ -18,7 +23,7 @@ def apply_cubic_spline_cutoff(pair_potential):
     -------
 
         potential: callable
-            a function where shifted force cutoff is applied to original function
+            a function where a cubic spline cutoff is applied to original function
 
     """
     pair_pot = numba.njit(pair_potential)
