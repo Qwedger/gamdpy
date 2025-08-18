@@ -1,5 +1,5 @@
 """ Test Active Ornstein-Uhlenbeck Particle
-The integrator has been tested with an analytical result for the simple one-dimensional case without interactions.
+The integrator has been tested with an analytical result for the simple one-dimensional case without interactions, source:https://doi.org/10.1103/PhysRevLett.113.238303.
 Further test could be done with some published benchmark result"""
 
 import numpy as np
@@ -70,8 +70,8 @@ def test_AOUP_simulation(verbose=False, plot=False):
     ]
 
     sim = gp.Simulation(configuration, interactions, integrator, runtime_actions,
-                        num_timeblocks=128,
-                        steps_per_timeblock=1024,
+                        num_timeblocks=16,
+                        steps_per_timeblock=512,
                         storage='memory')
     
     #equilibration
